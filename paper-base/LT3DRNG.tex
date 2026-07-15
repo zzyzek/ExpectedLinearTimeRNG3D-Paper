@@ -281,7 +281,36 @@ to $p$:
 
 \appendix
 \section{Appendix.0}
-Appendix sections are coded under \verb+\appendix+.
+
+For completeness, this section calculates the plume shape and volume.
+
+First consider a fixed point $q$ and a fixed but moveable point $\eta$.
+
+We think of $\eta$ as a point on a plane with normal $\eta / |\eta|$
+that intersects $q$ in the slice of $z=0$ to $z=1$.
+
+As we vary $\eta$ we want to know what the shape is traced out.
+
+The claim is that this is the surface of a sphere whose center is at $q/2$
+of radius $q/2$.
+
+To see this, consider $\eta = q/2 + (|q| / 2) v$, with $|v| = 1$.
+
+Calculate dot product of the line from $q$ to $\eta$ with the line from the origin to $\eta$:
+
+$$
+\begin{array}{ll}
+  & \eta = q/2 + (|q| / 2) v \\
+  & (q/2 + (|q|/2) v) \cdot (q/2 + (|q|/2) v - q ) \\
+  = & (q/2 + (|q|/2) v) \cdot ( -q/2 + (|q|/2) v ) \\
+  = & -(1/4)|q|^2 + (|q|/2) ^2 |v|^2 \\
+  = & 0
+\end{array}
+$$
+
+Proving the claim.
+
+
 
 \section{Appendix.1}
 ...

@@ -31,7 +31,7 @@ M=1000
 
 n=$n0
 
-spoif="../spoif"
+spoif="../bin/spoif"
 
 every=100
 

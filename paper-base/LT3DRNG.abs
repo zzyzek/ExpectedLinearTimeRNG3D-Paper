@@ -1,0 +1,10 @@
+An expected linear time algorithm ($O(n)$) for computing the relative neighborhood graph (RNG) for points in Euclidean space,
+  distributed uniformly in a unit three dimensional cube is given.
+  To the author's knowledge, this improves on the previously best known $O(n \log(n))$ in three dimensions.
+  The algorithm considers an individual anchor point and limits a volume that potential RNG neighbors can be in
+  through a plane partition heuristic.
+  The $K$ surrounding potential neighbors are then tested with
+  a naive $O(K^3)$ algorithm.
+  The RNG has finite degree when considering random point distributions in three dimensions,
+  resulting in an expected finite $K$, making $O(K^3) = O(1)$, providing
+  the linear expected time algorithm when enumerating through all points.

@@ -314,6 +314,54 @@ We want to find the the minimum volume of the plume
 for some point inside of a fence of radius $s$ (side length $2s$)
 nested inside of a larger fence of radius $s(2k+1)$.
 
+First consider a sphere of radius $R$ centered at $(-D,-D,-D)$ intersected with two
+half planes, $H ^ + _ {x=0} = \{ u : u _ x \ge 0 \}$, $H ^ + _ {y=0} = \{ u : u _ y \ge 0 \}$.
+For suitable $R$ and $D$, we want to estimate the volume.
+
+If we take two tetrahedrons completely enclosed by the slice, the maximum diagonal of
+the slice is $(R-\sqrt{2}D)$, with maximum straight side length (in the $x$-axis line and $y$-axis line) to
+also be $(R-\sqrt{2}D)$ and slice half height to also be $(R-\sqrt{2}D)$.
+
+The volume of the tetrahedron is then $(1/6) (R - \sqrt{2} D)^2 \sqrt{R^2 - 2 D^2}$ and so the volume
+of the two tetrahedrons stacked on top of each other to be $(1/3) (R - \sqrt{2} D)^2 \sqrt{R^2 - 2 D^2}$. 
+
+More succinctly:
+
+$$
+\begin{array}{l}
+  V _ {\text{slice}} > \frac{1}{3} (R - \sqrt{2} D)^2 \sqrt{R^2 - 2 D ^ 2}
+\end{array}
+$$
+
+We will get concrete estimates below but as a quick confirmation, we can check to make sure that
+this slice is a constant proportion of the fence it sits in.
+
+We know that $R \propto (k s)$
+and $D \propto (k s)$, for some $k \in \mathbb{Z}$ and $s \in \mathbb{R}$, the grid cell size.
+Call $R = \alpha (k s)$ and $D = \beta (k s)$.
+
+The plume will be four slices bundled together sitting inside of a $\gamma^3 (k s)^3$ volume.
+Take $\alpha, \beta \in \mathbb{R}$ to be the smallest of the four slices:
+
+$$
+\begin{array}{ll}
+  & \frac{ (4/3) (\alpha (k s) - \sqrt{2} \beta (k s))^2 \sqrt{ \alpha^2 (k s)^2 - 2 \beta^2 (k s)^2 } }{ \gamma^3 (k s)^3 } \\
+  = & \frac{ (4/3) (k s)^3 (\alpha - \sqrt{2} \beta )^2  \sqrt{ \alpha^2 - 2 \beta^2 } }{ \gamma^3 (k s)^3 } \\
+  = & \frac{ (4/3) (\alpha - \sqrt{2} \beta )^2  \sqrt{ \alpha^2 - 2 \beta^2 } }{ \gamma^3 } \\
+\end{array}
+$$
+
+as desired.
+
+When choosing random points inside of the larger fence cube, we can think of the plume as the probability
+a single point secures one side of the four post fence.
+There are six sides with lower bounds on the probability estimated above, giving us a coupon collector-like problem
+for the expected number of points seen before all sides of the fence are secured.
+
+
+
+
+
 
 
 

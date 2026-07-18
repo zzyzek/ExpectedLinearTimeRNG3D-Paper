@@ -282,7 +282,47 @@ to $p$:
 \appendix
 \section{Appendix.0}
 
-For completeness, this section calculates the plume shape and volume.
+For completeness, this section discusses the elementary but tedious calculations
+for the plume shape and volume.
+As a reminder, our goal is to show that increasing the grid fence by a fixed size
+will almost surely encapsulate a compact convex hull made from an anchor point and its neighbors.
+The convex hull guarantees that the relative neighborhood graph edges of the anchor point to
+its neighbors need only consider candidate points within the convex hull (with some caveats
+about extending the grid fence to include saboteurs, detailed in section \ref{TK}).
+
+The logic chain is roughly:
+
+\begin{itemize}
+  \item For an anchor point, $p$, and a grid fence side, there will be a region that a neighbor
+        point can fall in that will partition the fence side from the point, a process we call
+        \emph{securing the fence}, where a secured fence necessarily implies a compact convex hull
+        made from the points on the interior
+  \item The volume that secures a fence side will turn out to be four sphere slices joined together,
+        which we will call a \emph{plume}, where a sphere slice is the intersection of two perpendicular
+        half planes and a sphere
+  \item A lower bound estimate on the plume volume is a constant proportion of overall grid fence volume
+  \item A non-trivial constant plume volume makes the question of how many neighbors to be expected
+        to secure the overal six sided fence into a coupon collector-like problem, giving us an
+        expected finite grid fence size
+  \item Finally, approximatations on the four slices bundled together
+        allow us to give coarse values for grid fence sizes
+\end{itemize}
+
+It should be stressed that the discussion and estimates are meant primarily to show existence of
+a finite grid fence size.
+We focus on securing a fence side by waiting for some single neighbor point to secure it.
+%, which is equivalent to considering a four post fence side.
+The Shrinking Posts on Increasing Fence (SPoIF) algorithm in this paper has a smaller expected grid fence
+size before securitization
+as points can secure parts of the fence through clusters of posts, increasing the admissible
+region on each face side that can be secured.
+
+The calculations done in this appendix are meant to show that we only need to consider a finite grid fence
+size by providing correct, if horrible, bounds.
+In this paper, we are satisfied with providing empherical results for grid sizes that SPoIF uses without
+going into more rigorous analysis.
+
+
 
 First consider a fixed point $q$ and a fixed but moveable point $\eta$.
 
@@ -312,7 +352,7 @@ Proving the claim.
 
 We want to find the the minimum volume of the plume
 for some point inside of a fence of radius $s$ (side length $2s$)
-nested inside of a larger fence of radius $s(2k+1)$.
+nested inside of a larger fence of radius $s(2k+1)$ (side length $2s(2k+1)$).
 
 First consider a sphere of radius $R$ centered at $(-D,-D,-D)$ intersected with two
 half planes, $H ^ + _ {x=0} = \{ u : u _ x \ge 0 \}$, $H ^ + _ {y=0} = \{ u : u _ y \ge 0 \}$.
@@ -322,8 +362,17 @@ If we take two tetrahedrons completely enclosed by the slice, the maximum diagon
 the slice is $(R-\sqrt{2}D)$, with maximum straight side length (in the $x$-axis line and $y$-axis line) to
 also be $(R-\sqrt{2}D)$ and slice half height to also be $(R-\sqrt{2}D)$.
 
-The volume of the tetrahedron is then $(1/6) (R - \sqrt{2} D)^2 \sqrt{R^2 - 2 D^2}$ and so the volume
-of the two tetrahedrons stacked on top of each other to be $(1/3) (R - \sqrt{2} D)^2 \sqrt{R^2 - 2 D^2}$. 
+The volume of the tetrahedron is then:
+
+$$
+(1/6) (R - \sqrt{2} D)^2 \sqrt{R^2 - 2 D^2}
+$$
+
+The volume of the two tetrahedrons stacked on top of each other:
+
+$$
+(1/3) (R - \sqrt{2} D)^2 \sqrt{R^2 - 2 D^2}
+$$
 
 More succinctly:
 
@@ -337,7 +386,7 @@ We will get concrete estimates below but as a quick confirmation, we can check t
 this slice is a constant proportion of the fence it sits in.
 
 We know that $R \propto (k s)$
-and $D \propto (k s)$, for some $k \in \mathbb{Z}$ and $s \in \mathbb{R}$, the grid cell size.
+and $D \propto (k s)$, for some $k \in \mathbb{Z}$ and grid cell size $s \in \mathbb{R}$.
 Call $R = \alpha (k s)$ and $D = \beta (k s)$.
 
 The plume will be four slices bundled together sitting inside of a $\gamma^3 (k s)^3$ volume.
@@ -345,24 +394,79 @@ Take $\alpha, \beta \in \mathbb{R}$ to be the smallest of the four slices:
 
 $$
 \begin{array}{ll}
-  & \frac{ (4/3) (\alpha (k s) - \sqrt{2} \beta (k s))^2 \sqrt{ \alpha^2 (k s)^2 - 2 \beta^2 (k s)^2 } }{ \gamma^3 (k s)^3 } \\
-  = & \frac{ (4/3) (k s)^3 (\alpha - \sqrt{2} \beta )^2  \sqrt{ \alpha^2 - 2 \beta^2 } }{ \gamma^3 (k s)^3 } \\
-  = & \frac{ (4/3) (\alpha - \sqrt{2} \beta )^2  \sqrt{ \alpha^2 - 2 \beta^2 } }{ \gamma^3 } \\
+  & \frac{ (4/3) (\alpha (k s) - \sqrt{2} \beta (k s))^2 \sqrt{ \alpha^2 (k s)^2 - 2 \beta^2 (k s)^2 } }{ \gamma^3 (k s)^3 } \\[10pt]
+  = & \frac{ (4/3) (k s)^3 (\alpha - \sqrt{2} \beta )^2  \sqrt{ \alpha^2 - 2 \beta^2 } }{ \gamma^3 (k s)^3 } \\[10pt]
+  = & \frac{ (4/3) (\alpha - \sqrt{2} \beta )^2  \sqrt{ \alpha^2 - 2 \beta^2 } }{ \gamma^3 } \\[10pt]
 \end{array}
 $$
 
 as desired.
 
 When choosing random points inside of the larger fence cube, we can think of the plume as the probability
-a single point secures one side of the four post fence.
-There are six sides with lower bounds on the probability estimated above, giving us a coupon collector-like problem
-for the expected number of points seen before all sides of the fence are secured.
+a single point secures one side of the fence.
+It is equivalent to talk about securing one side of the fence face with securing four posts on each of corners of
+the fence face.
+As a reminder, the Shrinking Posts on Increasing Fence (SPoIF) uses nine posts per face, equally distributed
+along the face square.
+Since there are more opportunities to secure clusters of posts on a fence face,
+in addition to still retaining the features of the plume region, SPoIF will be able to secure the fence cube
+more quickly.
+We only consider the four post fence here to help simplify the calculation even though it inflates the expected
+number of points we need to see to secure the grid fence.
 
+Take the minimum plume value volume of the six directions and call it $V _ {\text{plume}}$.
+The probability that a point lands in one of the plumes is bounded below by $V _ {\text{plume}} / V _ {\text{fence}}$.
+Of the points that land in one of the plumes, the time we need to take to secure each face of the fence is now
+a coupon collector-like problem with six coupons.
 
+We can now plug in some real numbers to get coarse bounds on plume volumes, probabilities of landing in the critical region
+and expected grid sizes.
 
+As a reminder, we are considering a center grid cell, of side length $s$ where the anchor point, $p$,
+resides, all of which is inside a larger grid fence of side length $2s(k+1)$, for some fixed $k \ge 0, k \in \mathbb{Z}$
+as yet to be determined.
 
+The smallest size a slice can be is if the anchor point is on the corner of the interior grid cell and to choose the grid fence corner
+nearest to it.
+For example, $p = (s/2,s/2,s/2)$, $q = ( s(k+1/2), s(k + 1/2), s(k+1/2) )$.
 
+In such a case, the center point of the sphere is $(p + q)/2 = ( s(k+1)/2, s(k+1)/2, s(k+1)/2 )$,
+with radIUs $R = |(p+q)/2 - p| = |(sk/2,sk/2,sk/2)| = (\sqrt{3}/2) sk$.
+Here, $D = s(k+1)/2 - s/2 = sk / 2$ with $V _ {\text{fence}} = (s(2k+1))^3$.
 
+This yields:
+
+$$
+\begin{array}{ll}
+  \frac{ V_{\text{plume}} }{ V _ {\text{fence}}} > &  \frac{ \frac{4}{3} ( \frac{\sqrt{3}}{2} sk - \frac{\sqrt{2}}{2} sk)^2 ( \frac{3}{4}s^2 k^2 - \frac{1}{2} s^2 k^2 )^{\frac{1}{2}}  }{  s^3 (2k+1)^3  } \\[10pt]
+  = & \frac{ s^3 k^3 ( \sqrt{3} - \sqrt{2} )^2 }{ 3 \sqrt{2} s^3 (2k+1)^3 } \\[10pt]
+  = & \frac{ ( \sqrt{3} - \sqrt{2} )^2 }{ 3 \sqrt{2} (2+\frac{1}{k})^3 } \\[10pt]
+  > & \frac{ ( \sqrt{3} - \sqrt{2} )^2 }{ 81 \sqrt{2}  } \ \ \ \ \ \ \ \ (k \ge 1) \\[10pt]
+  > & 1 / 1198
+\end{array}
+$$
+
+For points that land within one of the six plume region, we would expect this to be be a six coupon collector
+problem with, at worst, equal probability.
+The coupon collector problem grows roghly as $n \log(n)$  which, in our case of six sides of the fence to secure,
+gives us an expected $11$ or more points before we secure the fence.
+
+Each point has roughly a $6 / 1198$ chance of landing in one of the six plumes, so we would expect
+roughly $11 / (6 / 1198) = 2196.3\dots$ number of points within the grid fence to appear before
+securing the fence.
+
+Each grid cell has roughly one point, so we would expect the number grid cells on a side to
+be
+
+$$
+\begin{array}{ll}
+  & (11 \cdot 1198 / 6)^{\frac{1}{3}} \\[10pt]
+  = &  12.9\ldots \sim 13 \\[10pt]
+\end{array}
+$$
+
+That is, we would expect $k \sim 6$, iterating roughly six to seven steps of increasing the grid fence size
+until securing the fence in this way.
 
 
 \section{Appendix.1}

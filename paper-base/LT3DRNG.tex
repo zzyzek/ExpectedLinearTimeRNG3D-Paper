@@ -63,16 +63,22 @@
 %\credit{Conceptualization of this study, Methodology, Software}
 
 \begin{abstract}
-  An expected linear time algorithm ($O(n)$) for computing the relative neighborhood graph (RNG) for points in Euclidean space,
-  distributed uniformly in a unit three dimensional cube is given.
-  To the author's knowledge, this improves on the previously best known $O(n \log(n))$ in three dimensions.
-  The algorithm considers an individual anchor point and limits a volume that potential RNG neighbors can be in
-  through a plane partition heuristic.
-  The $K$ surrounding potential neighbors are then tested with
-  a naive $O(K^3)$ algorithm.
-  The RNG has finite degree when considering random point distributions in three dimensions,
-  resulting in an expected finite $K$, making $O(K^3) = O(1)$, providing 
-  the linear expected time algorithm when enumerating through all points.
+  An expected linear time algorithm for computing the relative neighborhood graph (RNG) for points in Euclidean space,
+  distributed uniformly in a unit three dimensional cube, is given.
+  For each point, potential neighbors for an RNG connection are limited to an expected small bounding volume.
+  Volumes relative to the considered point are bounded through half plane partitions,
+  constructed from the point and its neighbors,
+  that remove regions where no RNG edge connections to the point can occur.
+  %The bounding volume is found by fencing in enclosing a convex hull 
+  %where the bounding volume is found through a plane partition heuristic.
+  The small bounding volume provides an expected constant number of neighbors to consider, making
+  each single point RNG calculation $O(1)$, providing the $O(n)$ expected runtime when enumerating through all points.
+  %The $K$ surrounding potential neighbors are then tested with
+  %a naive $O(K^3)$ algorithm.
+  %The RNG has finite degree for random point distributions in three dimensions,
+  %resulting in an expected finite $K$, making $O(K^3) = O(1)$, providing 
+  %the linear expected time algorithm when enumerating through all points.
+  To the author's knowledge, this improves on the previously best known $O(n \log n)$ in three dimensions.
 \end{abstract}
 
 %%% CREATES INITIAL 'GRAPHICAL ABSTRACT' PAGE
@@ -101,7 +107,7 @@
 \section{Introduction}
 
 Let $P = (p _ 0, p _ 1, \dots, p _ {n-1})$ be a set of points in $\mathbb{R^3}$.
-The relative neighborhood graph, $\text{RNG}(P)$, is a graph that connects two vertices,
+The relative neighborhood graph, $\text{RNG}(P)$, is an undirected, simple graph that connects two vertices,
 $p _ i, p _ j$ if and only if there is no other vertex within the \emph{lune} between
 them.
 
@@ -112,7 +118,16 @@ $$
 \end{array}
 $$
 
-Figure \ref{rng_lune2d} shows a graphical representation of points connected ....
+Figure \ref{TK} shows a highlighted 2D example of a connections and precluded connection.
+
+Call the relative neighborhood graph around a point to be $\text{RNG}(P,p)$.
+That is, the subset of the relative neighborhood graph that only has an edge that includes $p$.
+
+When the points are drawn from a uniform random process in the unit cube, the maximum
+degree of the relative neighborhood graph is bounded by a constant.
+
+
+
 
 
 \section{Related Work}
@@ -121,21 +136,25 @@ Figure \ref{rng_lune2d} shows a graphical representation of points connected ...
 
 
 For $P = (p _ 0, p _ 1, \dots, p _ {n-1})$,
-a brief overview of the algorithm roughly proceeds as follows:
+a rough overview of the algorithm proceeds as follows:
 
 \begin{itemize}
-  \item Create a grid, where each cell size of $\frac{1}{n^{1/3}}$
+  \item Create a grid, where each cell size of $n^{-1/3}$
   \item Bin points into grid cells, allowing for multiple points in a bin
-  \item For each point, $p$ (called an \emph{anchor point}):
+  \item For each point, $p$:
     \begin{itemize}
-      \item keep adding neighbor points, $q$, from nearby grid cells and discard
-        further away points whose connection to $p$ would be sabotaged by the existence of $q$
-      \item keep extending the radius of grid cells and collecting potential $q$ neighbors
-        until all other points outside the currently considered grid cells are guaranteed
-        to not be able to connect to $p$
-      \item add nearby additional points as needed and run a naive relative
-        neighborhood graph calculation for $p$ on the pool of $q$ neighbors
-        collected
+      \item keep adding nearby points from adjacent grid cells and discard
+        further away points whose connection to $p$ would be precluded by
+        the existence of the nearby point
+      \item keep extending the radius of a bounding cube, at grid cell increments,
+        until the collected nearby points have precluded connections from
+        all other points outside bounding cube to $p$
+      \item once a bounding cube has been found that has precluded a connection
+        to $p$ from all other points outside, add nearby points outside
+        the bounding cube that might preclude a connection of inside points to $p$
+      \item run a naive relative neighborhood graph, \\
+        $\text{RNG}(P,p)$, on all collected nearby points
+        to determine connections to $p$
     \end{itemize}
 \end{itemize}
 
@@ -144,11 +163,11 @@ A coarse grained plane partition heuristic is used to exclude further away point
 Given points $p$ and $q$,  any point, $w$, that lies on the other side
 of the plane with normal $\frac{(q-p)}{|q - p|}$ that passes through $q$, cannot connect to $p$, as $q$ would
 be in any lune that $p$ and $w$ would create.
-Figure \ref{planeHeuristic} gives a graphical representation of points excluded by this plane heuristic
+Figure \ref{TK} gives a graphical representation of points excluded by this plane heuristic
 in two dimensions.
 
 The plane partition heuristic is coarse, as the entire
-region that $q$ excludes from $p$ is more complicated (see Figure \ref{fineGrainedPartition}).
+region that $q$ excludes from $p$ is more complicated (see Figure \ref{TK}).
 While the plane partition heuristic is coarse, it's easy to caclulate and provides a good enough
 way to exclude large portions of points so that it can be used
 as the foundation for an expected linear time algorithm.
@@ -188,7 +207,7 @@ Before discussing the algorithm in detail, preliminary structural results will b
 \newtheorem{lemma}[theorem]{Lemma}
 \newdefinition{rmk}{Remark}
 \newproof{pf}{Proof}
-\newproof{pot}{Proof of Theorem \ref{thm2}}
+%\newproof{pot}{Proof of Theorem \ref{thmName}}
 
 
 %\newtheorem{lemma}[theorem]{Lemma}

@@ -1,10 +1,16 @@
-An expected linear time algorithm ($O(n)$) for computing the relative neighborhood graph (RNG) for points in Euclidean space,
-  distributed uniformly in a unit three dimensional cube is given.
-  To the author's knowledge, this improves on the previously best known $O(n \log(n))$ in three dimensions.
-  The algorithm considers an individual anchor point and limits a volume that potential RNG neighbors can be in
-  through a plane partition heuristic.
-  The $K$ surrounding potential neighbors are then tested with
-  a naive $O(K^3)$ algorithm.
-  The RNG has finite degree when considering random point distributions in three dimensions,
-  resulting in an expected finite $K$, making $O(K^3) = O(1)$, providing
-  the linear expected time algorithm when enumerating through all points.
+An expected linear time algorithm for computing the relative neighborhood graph (RNG) for points in Euclidean space,
+  distributed uniformly in a unit three dimensional cube, is given.
+  For each point, potential neighbors for an RNG connection are limited to an expected small bounding volume.
+  Volumes relative to the considered point are bounded through half plane partitions,
+  constructed from the point and its neighbors,
+  that remove regions where no RNG edge connections to the point can occur.
+  %The bounding volume is found by fencing in enclosing a convex hull
+  %where the bounding volume is found through a plane partition heuristic.
+  The small bounding volume provides an expected constant number of neighbors to consider, making
+  each single point RNG calculation $O(1)$, providing the $O(n)$ expected runtime when enumerating through all points.
+  %The $K$ surrounding potential neighbors are then tested with
+  %a naive $O(K^3)$ algorithm.
+  %The RNG has finite degree for random point distributions in three dimensions,
+  %resulting in an expected finite $K$, making $O(K^3) = O(1)$, providing
+  %the linear expected time algorithm when enumerating through all points.
+  To the author's knowledge, this improves on the previously best known $O(n \log n)$ in three dimensions.

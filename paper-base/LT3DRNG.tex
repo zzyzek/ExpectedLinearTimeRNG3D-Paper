@@ -26,6 +26,8 @@
 %\usepackage[authoryear]{natbib}
 \usepackage[numbers]{natbib}
 
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
 
 %%%Author definitions
 \def\tsc#1{\csdef{#1}{\textsc{\lowercase{#1}}\xspace}}
@@ -255,6 +257,40 @@ to $p$:
 
 
 \section{Algorithm}
+
+
+\begin{algorithm}
+  \caption{Relative Neighborhood Graph}\label{alg:RNG}
+  \begin{algorithmic}[1]
+    \Procedure{SPoIF\_RNG}{P}
+    \State \vspace{0.5em} $N = |P|, \ \ \ \ N_s = \lceil N^{\frac{1}{3}} \rceil, \ \ \ \ s = \frac{1}{N_s}$,
+    \State \vspace{0.5em} $B[0:N_s][0:N_s][0:N_s] = \emptyset$
+    \For{$p \in P$}
+      \vspace{0.5em} \State $\text{append}( B[ \lfloor N_s  p_x \rfloor ][ \lfloor N_s  p_y \rfloor ][ \lfloor N_s  p_z \rfloor ] , p )$
+    \EndFor
+
+    \For{$p \in P$}
+      \vspace{0.5em} \State $\text{SPoIF\_RNGp}(P,p)$
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \caption{Single Point Relative Neighborhood Graph}\label{alg:RNGv}
+  \begin{algorithmic}[1]
+    \Procedure{SPoIF\_RNGp}{P,p}
+      \State $\text{FencePostSecure}[0:6][0:9] = \text{\emph{False}}$
+      \For{ $R _ f = 0, \dots, N_s$ }
+        \State $G _ f = \text{GridPerimeterCells}(p, R_f)$
+
+        %\For{ 
+        %\EndFor
+      \EndFor
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
 
 \section{Conclusion}
 

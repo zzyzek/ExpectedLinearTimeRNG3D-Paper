@@ -120,6 +120,10 @@ $$
 \end{array}
 $$
 
+Here, $|\cdot|$ is the standard Euclidean norm.
+This paper focuses almost exclusively on points in 3D but will occasionally talk about
+points in 2D for explanatory examples.
+
 Figure \ref{TK} shows a highlighted 2D example of a connections and precluded connection
 and Figure \ref{TK}, \ref{TK} shows examples of a relative neighborhood graph for 2D and 3D.
 
@@ -131,6 +135,16 @@ This local neighborhood is effectively constant in neighbor size, allowing us to
 each points relative neighborhood graph edges in constant time, providing a linear time algorithm
 to find the relative neighborhood graph in 3D.
 
+
+It's believed that the worst case runtime for a relative neighborhood graph in 2D and 3D is
+at least $O(n \log n)$.
+Randomness holds special structure and many cases in the general case won't happen, with
+high probability.
+Note that randomness is a different condition than generic or general position, as point
+configurations that pass a generic or general position criteria might not be considered
+random.
+Only points uniformly distributed in the unit cube are considered in this paper,
+without focusing on whether they're in generic or general position.
 
 %Call the relative neighborhood graph around a point to be $\text{RNG}(P,p)$.
 %That is, the subset of the relative neighborhood graph that only has an edge that includes $p$.
@@ -499,18 +513,31 @@ at random in the unit cube.
 To the author's knowledge, no well known expected linear time algorithm for finding the relative neighborhood
 graph is known for the case of points distributed uniformly in the unit cube.
 
-The algorithm presented also answers a question posed by Katajainen and Nevalainen of whether there's a simpler
+Randomness of point distribution eliminates many pathological cases that would need to be taken care of with
+a fully deterministic algorithm.
+The bounded maximum degree of the relative neighborhood graph in 3D, along with the randomness assumption, allow
+a construction of an expected linear time algorithm by employing a coarse cut plane heuristic that allows
+only local neighborhoods of points to be considered.
+A finite neighborhood makes naive calculations constant time, allowing for an overall expected linear runtime algorithm.
+
+The algorithm presented also answers a question posed by Katajainen and Nevalainen \cite{KN85} of whether there's a simpler
 algorithm that wouldn't need to handle points close to the border differently.
 The algorithm presented avoids needing to consider side or corner regions independently as the the cut plane
 heuristic provides an orthogonal partition and fences near the edge of the region will be secured by falling out of
 bounds.
 
-Certain pathological simple geometries can cause problems without further processing.
+Certain pathological simple geometries can cause problems for the algorithm as presented.
 For example, a "diamond`` shaped distribution might have trouble securing the fence.
-This can maybe be overcome by various methods, for example doing a pre-processing step
-of marking grid cells as out of bounds if they fall outside of some initial convex hull calculation,
+Extensions have the potential to overcome limitations while still retaining
+overall linear time execution by,
+%This can maybe be overcome by various methods,
+for example, doing a pre-processing step
+that marks grid cells as out of bounds if they fall outside of some initial convex hull calculation,
 or doing random rotations and processing parallel copies.
-These ideas are not pursued in this paper other than to mention them.
+These problems and ideas are not pursued in this paper other than to mention they exist and there might be
+a way to mitigate them.
+
+
 
 
 

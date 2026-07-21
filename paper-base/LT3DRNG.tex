@@ -215,49 +215,110 @@ Before discussing the algorithm in detail, preliminary structural results will b
 %\newtheorem{lemma}[theorem]{Lemma}
 
 If $w$ is on the other side of the plane that passes through $q$ and with tangent in the direction of $(q-p)$,
-then $q$ will always be in the lune created by $p$ and $w$ (see Figure \ref{planeHeuristic}):
+then $q$ will always be in the lune created by $p$ and $w$ (see Figure \ref{TK}):
 
 
 \begin{lemma}[Plane Partition Heuristic]
-  \label{planeHeur}
-  $$
-  \begin{array}{l}
-  p,q,w \in \mathbb{R}^3
-  \end{array}
-  $$
-  if
+  \label{lemma:plane}
+  if $p,q,w \in \mathbb{R}^3$ with:
   %w \in H = \{ u \in \mathbb{R}^3 | (q-p) \cdot (u - q) \ge 0 \}
   $$
+  \begin{array}{l}
   w \in H ^ {+} _ {p,q} = \{ u \ :  \ (q-p) \cdot (u - q) \ge 0 \}
+  \end{array}
   $$
   then
-  $$q \in L _ {p,w} = \{ v \ : \ |v-p| \le |p-w| \ \& \ |v-w| \le |p-w| \}
-  $$.
+  $$
+  \begin{array}{l}
+    q \in \text{Lune}(p,w)  = \\
+      \ \ \ \{ v \ : \ |v-p| \le |p-w| \ \& \ |v-w| \le |p-w| \}\\
+  \end{array}
+  $$
 \end{lemma}
 
-%\begin{proof}
-%  ...
-%\end{proof}
+\begin{pf}
+  TK
+\end{pf}
+
+The plane partition heuristic allows us to construct a convex hull from neighboring
+points that will bound the area that needs to be tested for relative neighborhood graph
+neighbors of $p$.
 
 Only points within the convex hull have the potential to connect to $p$:
 %need to be considered for a relative neighborhood graph connection to $p$:
 
-\begin{theorem}
-  Let $p \in \mathbb{R}^3$, $Q = (q _ 0, q _ 1, \dots, q _ {m-1}) \subset P$ and $C$ be the
+\begin{lemma}[Convex Hull Heuristic]
+  \label{lemma:hull}
+  Let $p \in \mathbb{R}^3$, $Q = (q _ 0, q _ 1, \dots, q _ {m-1}) \subset P$ and $\mathbf{C}$ be the
   compact convex hull created from $H _ i ^ {-} = \{ u \in \mathbb{R}^3 | (q _ i - p ) \cdot (u - q _ i) < 0 \}$,
-  then $w \notin C \to w \notin \text{RNG}(P,p)$
-\end{theorem}
+  then $(w,p) \in \text{RNG}(P,p) \to w \in \mathbf{C}$
+\end{lemma}
 
 \begin{pf}
-  All $w$ outside of $C$ will have some $q _ i \in Q$ in the $L(w,p)$ lune, so cannot have an RNG edge to $p$.
+  By Lemma \ref{lemma:plane}, all $w$ outside of $\mathbf{C}$ will have some $q _ i \in Q$ in the $\text{Lune}(w,p)$, so cannot have an RNG edge to $p$.
 \end{pf}
 
-Only points within the convex hull can be a relative neighborhood graph neighbor of $p$
-but points outside of the convex hull might still affect connections within the convex hull.
+Lemma \ref{lemma:hull} only guarantees that RNG connections to $p$ fall within the hull, $\mathbf{C}$.
+Not every point within $\mathbf{C}$ might connect to $p$ and points outside of $\mathbf{C}$ might still influence
+connections to $p$.
+For example, Figure \ref{TK} shows a potential connection between two points within the convex
+hull but is thwarted by a point outside the convex hull that is within the lune created by the pair.
 
-For example, Figure \ref{TK} shows a potential connection to a between two points within the convex
-hull but is thwarted by a point outside the convex hull but within the lune created by the potential
-pair.
+Points outside of the convex hall might influence connections to $p$ but we can bound how
+far these points can be.
+The maximum distance to $p$ and the convex hull bounds what points can influence connections to $p$ to
+that distance:
+
+\begin{lemma}[Convex Hull Extension Heuristic]
+  \label{lemma:extension}
+  Let $p, \mathbf{C}$ be the anchor point and convex hull as detailed above.
+  Let $R _ {\text{max}} = \max _ {u \in \mathbf{C}} |u-p|$ be the maximum distance of the convex hull boundary to $p$.
+  All points that could affect $\text{RNG}(P,p)$ lie within a sphere of radius $R _ {\text{max}}$, centered at $p$.
+\end{lemma}
+
+\begin{pf}
+  The maximum lune radius for any neighbor to $p$ is bounded above by $R _ {\text{max}}$.
+  Any point, $w$ such that $|w-p| > D$, will be further away from the maximum lune radius
+  and so can't influence any connection within $\mathbf{C}$.
+\end{pf}
+
+The above already suggests a linear time algorithm by starting at a grid cell that $p$ resides in
+and adding neighboring points from neighboring grid cells until a compact convex hull has been achieved
+that meets some maximum radius criteria.
+All points within a sphere centered at $p$ can then be added and a naive relative neighborhood graph algorithm
+can be run on the reduced neighbor set.
+It can be shown that for a constant number of neighbors, the maximum distance of $p$ to the convex hull is bounded,
+giving an expected linear time algorithm for random points in the unit cube.
+
+While there is an expected constant number of neighbors that make up the convex hull, the convex hull's representation
+above needs to be converted to points via a vertex enumeration procedure, inflating the runtime constants were a
+naive vertex enumeration algorithm to be used.
+There may be ways of speeding the vertex enumeration up further by considering the structure of the problem in question
+but this methodology is not pursued further in this paper.
+
+Instead, a bounding box cube is used as a proxy for the convex hull.
+The bounding box cube, called a \emph{fence}, has certain key point points on each face that will be used
+to indicate when a cutting plane has partitions portions of the fence from the anchor point, $p$.
+Once all portions have been partitioned, a process that will be called \emph{securing the fence},
+there will be an embedded convex hull within the fence and only the points within the fence need to be
+considered for connections.
+
+For the anchor point $p$, only $RNG(P,p)$ connections can happen within the secured fence but, as alluded
+to with \ref{lemma:extension}, other points outside of the secured fence might influence connections within.
+We will see that a constant factor of fence radius need be considered to add additional points to the naive
+relative neighborhood graph computation.
+
+A secured fence necessarily implies a compact convex hull embedded within the fence but the other direction
+is not true in general, as there can be a convex hull whose volume is completely contained within the fence but whose
+partition planes do not secure the fence.
+We will see that this has no effect on the expected linear runtime as securing the fence for an individual
+anchor point is expected to use a constant number of neighbors.
+
+
+
+
+
+
 
 ...
 

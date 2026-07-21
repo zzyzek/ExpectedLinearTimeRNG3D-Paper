@@ -251,6 +251,49 @@ Before discussing the algorithm in detail, preliminary structural results will b
 
 \subsection{Foundation}
 
+Supporting mathematical foundation is provided in this section to motivate the
+algorithmic design.
+Our goal is to provide the mathematical infrastructure that considers connections
+to an \emph{anchor point} in a spatially local neighborhood around it.
+
+An overview of what's being achieved is:
+
+\begin{itemize}
+  \item Show the plane partition heuristic can be used to implicitely discard points
+  \item Show that the plane partition heuristic can be used to create convex hull region
+        of points that can connect
+  \item The convex hull need only be extended at most a constant proportion of the maximum
+        diameter to include the region that any point may reside in that can affect connections
+        to the anchor point
+  \item A bounding cube can be used as a proxy for convex hull, with the bounding cube
+        being partitioned implying a compact convex hull within it
+  \item The bounding cube, with high probability, need only be grown by
+        a constant factor, relative to grid cell size, ensuring constant runtime
+\end{itemize}
+
+Constant runtime for a finding relative neighborhood graph connections of a single
+point imply a linear runtime overal.
+
+From the anchor point to points nearby, a plane partition heuristic
+is used to partition space and to implicitely discard points from consideration.
+From the plane partition heuristic, a convex hull can be constructed
+whereby only points within need be considered for potential connections.
+Points outside the convex hull can't connect to the anchor point but
+still need to be considered as they still may be able to preclude connections.
+
+The convex hull will not be used directly.
+For conceptual simplicity and constant speed concerns,
+a bounding cube region, called a \emph{fence}, will be used.
+
+The bounding cube has points placed on each of its faces, called \emph{posts},
+grouped into clusters that will be used to indicate when the whole of the
+bounding cube is partitioned.
+The cube of grid cells is used to consider neighbor points and test
+plane partitions and is grown until the 
+
+A direct convex hull can be used but, for reasons discussed elsewhere, is
+not pursued further in this paper.
+
 %\renewcommand\qedsymbol{$\blacksquare$}
 
 %\newtheorem{theorem}{Theorem}

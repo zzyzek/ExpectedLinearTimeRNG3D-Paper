@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.1.30)  21 JUL 2026 00:09
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.1.30)  21 JUL 2026 02:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -912,68 +912,67 @@ Package hyperref Warning: Ignoring empty anchor on input line 107.
 
 LaTeX Warning: Reference `TK' on page 1 undefined on input line 123.
 
+
+LaTeX Warning: Reference `TK' on page 1 undefined on input line 124.
+
+
+LaTeX Warning: Reference `TK' on page 1 undefined on input line 124.
+
 LaTeX Font Info:    Trying to load font information for TS1+stix on input line 
-164.
+173.
 (/usr/share/texlive/texmf-dist/tex/latex/stix/ts1stix.fd
 File: ts1stix.fd 2015/04/17 v1.1.2-latex STIX TS1 font definitions
 )
-
-LaTeX Warning: Reference `TK' on page 1 undefined on input line 188.
-
-
-LaTeX Warning: Reference `TK' on page 1 undefined on input line 192.
-
 LaTeX Font Info:    Trying to load font information for T1+cmss on input line 1
-98.
+99.
+
 (/usr/share/texlive/texmf-dist/tex/latex/base/t1cmss.fd
 File: t1cmss.fd 2019/12/16 v2.5j Standard LaTeX font definitions
 ) [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
  <./thumbnails/cas-email.jpeg> <./thumbnails/cas-url.jpeg>]
+
+LaTeX Warning: Reference `TK' on page 2 undefined on input line 202.
+
+
+LaTeX Warning: Reference `TK' on page 2 undefined on input line 205.
+
 \c@theorem=\count347
 \c@rmk=\count348
 \c@pf=\count349
 
+LaTeX Warning: Reference `TK' on page 2 undefined on input line 254.
 
-LaTeX Warning: Reference `TK' on page 2 undefined on input line 238.
 
-
-Underfull \hbox (badness 1442) in paragraph at lines 243--245
+Underfull \hbox (badness 1442) in paragraph at lines 259--261
 []\T1/stix/m/it/10 if $\LS1/stix/m/it/10 p; q; w \LS1/stix/m/n/10 Ë \LS1/stixbb
 /m/n/10 R[]$
  []
 
 
-LaTeX Warning: Reference `TK' on page 2 undefined on input line 284.
+LaTeX Warning: Reference `TK' on page 2 undefined on input line 300.
 
 [2]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 355.
-
-Underfull \hbox (badness 6268) in paragraph at lines 357--358
-[]\T1/stix/b/n/10 pro-ce-dure \T1/stix/m/sc/10 Rel-a-tiveNeigh-bor-hood-Graph-P
-oint-
- []
+put line 371.
 
 
-LaTeX Warning: Reference `TK' on page 3 undefined on input line 499.
+LaTeX Warning: Reference `TK' on page 3 undefined on input line 516.
 
 [3] [4]
-Overfull \hbox (10.94406pt too wide) in paragraph at lines 684--687
+Overfull \hbox (10.94406pt too wide) in paragraph at lines 701--704
 \T1/stix/m/n/10 one of the six darts, so we would ex-pect roughly $\LS1/stix/m/
 n/10 11_.6_1198/ =
  []
 
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 8.50006pt on input line 705.
+(Font)              scaled to size 8.50006pt on input line 722.
 (./LT3DRNG.bbl
 
 Package natbib Warning: Empty `thebibliography' environment on input line 15.
 
-) [5
-
-] (./LT3DRNG.aux)
+) [5] (./LT3DRNG.aux)
 
 LaTeX Warning: There were undefined references.
 
@@ -981,13 +980,13 @@ Package rerunfilecheck Info: File `LT3DRNG.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 17601 strings out of 480171
- 266674 string characters out of 5894489
- 556607 words of memory out of 5000000
- 35213 multiletter control sequences out of 15000+600000
- 561708 words of font info for 136 fonts, out of 8000000 for 9000
+ 17604 strings out of 480171
+ 266721 string characters out of 5894489
+ 555607 words of memory out of 5000000
+ 35214 multiletter control sequences out of 15000+600000
+ 564437 words of font info for 137 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
- 75i,11n,93p,274b,406s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 75i,11n,93p,274b,404s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc}{/usr/share/texliv
 e/texmf-dist/fonts/enc/dvips/stix/stix-ts1.enc}{/usr/share/texlive/texmf-dist/f
 onts/enc/dvips/inconsolata/i4-t1-0.enc}{/usr/share/texlive/texmf-dist/fonts/enc
@@ -1005,10 +1004,10 @@ ist/fonts/type1/public/stix/stix-mathrm-bold.pfb></usr/share/texlive/texmf-dist
 ype1/public/stix/stix-mathscr.pfb></usr/share/texlive/texmf-dist/fonts/type1/pu
 blic/stix/stix-mathsf.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/sti
 x/stix-mathtt.pfb>
-Output written on LT3DRNG.pdf (5 pages, 257193 bytes).
+Output written on LT3DRNG.pdf (5 pages, 258152 bytes).
 PDF statistics:
- 134 PDF objects out of 1000 (max. 8388607)
- 95 compressed objects within 1 object stream
- 24 named destinations out of 1000 (max. 500000)
+ 137 PDF objects out of 1000 (max. 8388607)
+ 98 compressed objects within 1 object stream
+ 26 named destinations out of 1000 (max. 500000)
  11 words of extra memory for PDF output out of 10000 (max. 10000000)
 

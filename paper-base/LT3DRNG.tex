@@ -120,13 +120,20 @@ $$
 \end{array}
 $$
 
-Figure \ref{TK} shows a highlighted 2D example of a connections and precluded connection.
+Figure \ref{TK} shows a highlighted 2D example of a connections and precluded connection
+and Figure \ref{TK}, \ref{TK} shows examples of a relative neighborhood graph for 2D and 3D.
 
-Call the relative neighborhood graph around a point to be $\text{RNG}(P,p)$.
-That is, the subset of the relative neighborhood graph that only has an edge that includes $p$.
-
-When the points are drawn from a uniform random process in the unit cube, the maximum
+When points are placed uniformly at random in the unit cube, the maximum
 degree of the relative neighborhood graph is bounded by a constant.
+When random in this manner, the edges from any point connecting it to its relative
+neighborhood graph only extend to a proportionally small local neighborhood.
+This local neighborhood is effectively constant in neighbor size, allowing us to calculate
+each points relative neighborhood graph edges in constant time, providing a linear time algorithm
+to find the relative neighborhood graph in 3D.
+
+
+%Call the relative neighborhood graph around a point to be $\text{RNG}(P,p)$.
+%That is, the subset of the relative neighborhood graph that only has an edge that includes $p$.
 
 
 
@@ -155,32 +162,39 @@ OUTLINE
 \section{Motivation and Structure}
 
 
+\subsection{Overview}
+
 Let $P = (p _ 0, p _ 1, \dots, p _ {n-1})$, where each $p _ i \in \mathbb{R}^3$ is
 chosen uniformly at random in the unit cube.
 
 A rough overview of the algorithm proceeds as follows:
 
 \begin{itemize}
-  \item Create a grid, where each cell size of $n^{-1/3}$
-  \item Bin points into grid cells, allowing for multiple points in a bin
+  \item { \bf Initialize} a three dimensional grid, where each cell size of $n^{-1/3}$ on a side
+  \item { \bf Bin} points into grid cells, allowing for multiple points in a bin.
   \item For each point, $p$:
     \begin{itemize}
-      \item keep adding nearby points from adjacent grid cells and discard
-        further away points whose connection to $p$ would be precluded by
-        the existence of the nearby point
-      \item keep extending the radius of a bounding cube, at grid cell increments,
+      \item {\bf Add} nearby points from adjacent grid cells
+      \item {\bf Increase} the radius of a bounding cube, at grid cell increments,
         until the collected nearby points have precluded connections from
         all other points outside bounding cube to $p$
-      \item once a bounding cube has been found that has precluded a connection
-        to $p$ from all other points outside, add nearby points outside
-        the bounding cube that might preclude a connection of inside points to $p$
-      \item run a naive relative neighborhood graph, \\
+      \item {\bf Extend} the list of nearby points, once a bounding cube has been
+        found, to include points that might preclude connections on the inner
+        bounding cube
+      \item {\bf Run} a naive relative neighborhood graph, \\
         $\text{RNG}(P,p)$, on all collected nearby points
         to determine connections to $p$
     \end{itemize}
 \end{itemize}
 
-A coarse grained plane partition heuristic is used to exclude further away points from consideration.
+The binning phase creates a Poisson process with an average of one point per bin.
+A coarse grained plane partition heuristic is used to exclude further away points from consideration
+and is the method by which the process knows to stop extending the bounding cube.
+
+Once a bounding cube has been found, other points outside of the bounding cube, but still within
+a, larger, local distance need to be added as they could influence connections on the interior bounding cube.
+The list of all neighbors is given to a naive relative neighborhood graph algorithm and the process is then
+repeated for each point.
 
 Given points $p$ and $q$,  any point, $w$, that lies on the other side
 of the plane with normal $\frac{(q-p)}{|q - p|}$ that passes through $q$, cannot connect to $p$, as $q$ would
@@ -188,17 +202,18 @@ be in any lune that $p$ and $w$ would create.
 Figure \ref{TK} gives a graphical representation of points excluded by this plane heuristic
 in two dimensions.
 
-The plane partition heuristic is coarse, as the entire
-region that $q$ excludes from $p$ is more complicated (see Figure \ref{TK}).
-While the plane partition heuristic is coarse, it's easy to caclulate and provides a good enough
-way to exclude large portions of points so that it can be used
-as the foundation for an expected linear time algorithm.
+The entire region that $q$ excludes from $p$ is more complicated (see Figure \ref{TK})
+so the plane partition heuristic is coarse but provides an
+easy way to exclude large portions of points.
 
 %The plane partition heuristic excludes points, but
-To maintain a linear time algorithm, we need to
-avoid processing points individually and
-to implicitely exclude large collection of points that can never connect to the our anchor point $p$.
-To do this, we consider a current grid cell collection of integral radius $R \in \mathbb{Z}$, centered
+To maintain a linear time algorithm, 
+large collections of points that can never connect to our anchor point, $p$, need to be
+efficiently excluded.
+%we need to
+%avoid processing points individually and
+%to implicitely exclude large collection of points that can never connect to the our anchor point $p$.
+To do this, consider a current grid cell collection of integral radius $R \in \mathbb{Z}$, centered
 on the grid cell where anchor point $p$ resides.
 If the tangent planes that passes through neighbor $q$, and in direction $(q-p)$ within the grid cell collection,
 partition each of the six sides of our cube of radius $R$, we can be assured that any points outside
@@ -220,6 +235,7 @@ but the increase in $R$ will shown to be bounded by a constant factor, allowing 
 
 Before discussing the algorithm in detail, preliminary structural results will be discussed.
 
+\subsection{Foundation}
 
 %\renewcommand\qedsymbol{$\blacksquare$}
 
@@ -352,17 +368,17 @@ TODO:
 \section{Algorithm}
 
 \begin{algorithm}
-  \caption{Relative Neighborhood Graph for single point, Naive method}\label{alg:RNGNaive}
+  \caption{Single point naive Relative Neighborhood Graph}\label{alg:RNGPointNaive}
   \begin{algorithmic}[1]
-    \Procedure{RelativeNeighborhoodGraphPointNaive}{L, p}
-      \For{ $q \in L / \{p\}$ }
+    \Procedure{RNGPointNaive}{Q, p}
+      \For{ $q \in Q / \{p\}$ }
         \State $\text{isConnected } = \text{ \emph{False}}$
-        \For{ $u \in L / \{p,q\}$ }
+        \For{ $u \in Q / \{p,q\}$ }
           \If{ $\text{InLune}(p,q,u)$ }
             \State $\text{isConnected } = \text{ \emph{False}}$
           \EndIf
         \EndFor
-        \If{ $\text{isConnected } = \text{ \emph{True}}$ }
+        \If{ $\text{isConnected } == \text{ \emph{True}}$ }
           $E = E \cup (p,q)$
         \EndIf
       \EndFor
@@ -376,7 +392,7 @@ TODO:
 \begin{algorithm}
   \caption{Relative Neighborhood Graph, Secure Posts on Increasing Fence (SPoIF)}\label{alg:RNGSPoIF}
   \begin{algorithmic}[1]
-    \Procedure{SPoIF\_RNG}{P}
+    \Procedure{RNGSPoIF}{P}
     \State \vspace{0.5em} $E = \{\}$
     \State \vspace{0.5em} $N = |P|, \ \ \ \ N_s = \lceil N^{\frac{1}{3}} \rceil, \ \ \ \ s = \frac{1}{N_s}$,
     \State \vspace{0.5em} $B[0:N_s][0:N_s][0:N_s] = \emptyset$
@@ -385,7 +401,7 @@ TODO:
     \EndFor
 
     \For{$p \in P$}
-      \vspace{0.5em} \State $E = E \cup \text{SPoIF\_RNGp}(B,P,p)$
+      \vspace{0.5em} \State $E = E \cup \text{RNGPointSPoIF}(B,P,p)$
     \EndFor
 
     \State $\text{return } E$
@@ -395,18 +411,19 @@ TODO:
 \end{algorithm}
 
 \begin{algorithm}
-  \caption{Single Point Relative Neighborhood Graph, Secure Posts on Increasing Fence, single point}\label{alg:RNGpSPoIF}
+  \caption{Single point Relative Neighborhood Graph, Secure Posts on Increasing Fence}\label{alg:RNGpSPoIF}
   \begin{algorithmic}[1]
-    \Procedure{SPoIF\_RNGp}{B, P, p}
+    \Procedure{RNGPointSPoIF}{B, P, p}
 
       \State Initialize $\text{FencePostCluster}$ to $\text{False}$, \\
         take $2 \times 2$ clusters of fence posts for each face
 
-      \State $R _f = 0, R _ {\text{max}} = 0$
+      \State $R _f = 0, \ \ R _ {\text{max}} = 0$
+      \State $Q = \{\}$
 
       \For{ $(R _ f \le N_s) \ \& (\text{\emph{False}} \in \text{FencePostCluster})$ }
         \For{ $q \in \text{GridPerimeterCells}(B, p, R_f) / \{p\}$ }
-          \State $L = L \cup \{q\}$
+          \State $Q = Q \cup \{q\}$
           \State $R _ {\text{max}} = $ maximum of $R_{\text{max}}$ and grid cell distance that lune of $(p,q)$ intersects
         \EndFor
 
@@ -418,16 +435,16 @@ TODO:
             \EndIf
           \EndFor
         \EndFor
-        $R _ f ++$
+        $R _ f = R _ f + 1 $
       \EndFor
 
       \For{ $R _ e = [R _ f+1 : R _ {\text{max}} ]$ }
         \For{ $q \in \text{GridPerimeterCells}(p, R_f) / \{p\}$ }
-          \State $L = L \cup \{q\}$
+          \State $Q = Q \cup \{q\}$
         \EndFor
       \EndFor
 
-      \State $\text{return } \text{RNGPointNaive}( P, B, p, L )$
+      \State $\text{return } \text{RNGPointNaive}( Q, p )$
 
     \EndProcedure
   \end{algorithmic}

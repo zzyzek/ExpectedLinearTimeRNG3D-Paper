@@ -134,11 +134,31 @@ degree of the relative neighborhood graph is bounded by a constant.
 
 \section{Related Work}
 
+OUTLINE
+
+- Talk about KN85 and KNT86 and their exceptions to corner and side regions of grid.
+  Also talk about restriction to 2d and how generalizations to 3d are complicated
+
+- 3d algs of agarwal,matousek are meant for worst case setups but super linear (e.g. advesarial)
+
+- talk about efficient computation of Urquhart (sp?) graph
+
+- talk about using delaunay triangulation to bootstrap
+
+- review gives best known algorithm at $O(n \log n)$ for general position (doesn't talk about random position?)
+
+- Jaromczyk and Kowaluk on $O(n^2 \log n)$ 3d algorithm with 'coarse' elimination phase that was inspiration
+  for plane cut heuristic
+
+
+
 \section{Motivation and Structure}
 
 
-For $P = (p _ 0, p _ 1, \dots, p _ {n-1})$,
-a rough overview of the algorithm proceeds as follows:
+Let $P = (p _ 0, p _ 1, \dots, p _ {n-1})$, where each $p _ i \in \mathbb{R}^3$ is
+chosen uniformly at random in the unit cube.
+
+A rough overview of the algorithm proceeds as follows:
 
 \begin{itemize}
   \item Create a grid, where each cell size of $n^{-1/3}$
@@ -282,7 +302,7 @@ that distance:
   and so can't influence any connection within $\mathbf{C}$.
 \end{pf}
 
-The above already suggests a linear time algorithm by starting at a grid cell that $p$ resides in
+The above already suggests a linear time algorithm by starting at a grid cell where $p$ resides
 and adding neighboring points from neighboring grid cells until a compact convex hull has been achieved
 that meets some maximum radius criteria.
 All points within a sphere centered at $p$ can then be added and a naive relative neighborhood graph algorithm
@@ -290,20 +310,21 @@ can be run on the reduced neighbor set.
 It can be shown that for a constant number of neighbors, the maximum distance of $p$ to the convex hull is bounded,
 giving an expected linear time algorithm for random points in the unit cube.
 
-While there is an expected constant number of neighbors that make up the convex hull, the convex hull's representation
-above needs to be converted to points via a vertex enumeration procedure, inflating the runtime constants were a
+While there is an expected constant number of neighbors that make up the convex hull,
+a natural operation to find radius bounds would be to convert to
+a point representation via a vertex enumeration procedure, inflating the runtime constants were a
 naive vertex enumeration algorithm to be used.
-There may be ways of speeding the vertex enumeration up further by considering the structure of the problem in question
+There may be ways of speeding up the vertex enumeration by considering the structure of the problem in question
 but this methodology is not pursued further in this paper.
 
 Instead, a bounding box cube is used as a proxy for the convex hull.
 The bounding box cube, called a \emph{fence}, has certain key point points on each face that will be used
-to indicate when a cutting plane has partitions portions of the fence from the anchor point, $p$.
+to indicate when a cutting plane has partitioned portions of the fence from the anchor point, $p$.
 Once all portions have been partitioned, a process that will be called \emph{securing the fence},
-there will be an embedded convex hull within the fence and only the points within the fence need to be
-considered for connections.
+there's a guarantee of an embedded convex hull within the fence and only the points within the fence need to be
+considered for $\text{RNG}(P,p)$ connections.
 
-For the anchor point $p$, only $RNG(P,p)$ connections can happen within the secured fence but, as alluded
+For the anchor point $p$, only $\text{RNG}(P,p)$ connections can happen within the secured fence but, as alluded
 to with \ref{lemma:extension}, other points outside of the secured fence might influence connections within.
 We will see that a constant factor of fence radius need be considered to add additional points to the naive
 relative neighborhood graph computation.
@@ -311,17 +332,21 @@ relative neighborhood graph computation.
 A secured fence necessarily implies a compact convex hull embedded within the fence but the other direction
 is not true in general, as there can be a convex hull whose volume is completely contained within the fence but whose
 partition planes do not secure the fence.
-We will see that this has no effect on the expected linear runtime as securing the fence for an individual
+We will see that this has no effect on the expected linear runtime, as securing the fence for an individual
 anchor point is expected to use a constant number of neighbors.
 
 
 
+TODO:
 
+- securing fence implies compact convex hull on interior
 
+- a secured fence need only consider a larger fence, of factor $\sqrt{3}$, to include all points that could
+  influence relative neighborhood edges to $p$
 
+- $SPoIF:RNGp(P,p)$ runs in constant expected time
 
-...
-
+- $SPoIF:RNG(P)$ runs in expected linear time
 
 
 \section{Algorithm}
@@ -411,6 +436,17 @@ anchor point is expected to use a constant number of neighbors.
 
 \section{Conclusion}
 
+An expected linear time algorithm to find the relative neighborhood graph for 3D points placed uniformly
+at random in the unit cube.
+To the author's knowledge, no well known expected linear time algorithm for finding the relative neighborhood
+graph is known for the case of points distributed uniformly in the unit cube.
+
+The algorithm presented also answers a question posed by Katajainen and Nevalainen of whether there's a simpler
+algorithm that wouldn't need to handle points close to the border differently.
+
+
+
+
 \section{Bibliography}
 
 %Two bibliographic style files (\verb+*.bst+) are provided ---
@@ -454,8 +490,8 @@ anchor point is expected to use a constant number of neighbors.
 \appendix
 \section{Appendix.0}
 
-For completeness, this section discusses the elementary but tedious calculations
-for the plume shape and volume.
+For completeness, this section discusses the elementary, but tedious, calculations
+for the dart shape and volume.
 As a reminder, our goal is to show that increasing the grid fence by a fixed size
 will almost surely encapsulate a compact convex hull made from an anchor point and its neighbors.
 The convex hull guarantees that the relative neighborhood graph edges of the anchor point to
@@ -470,10 +506,10 @@ The logic chain is roughly:
         \emph{securing the fence}, where a secured fence necessarily implies a compact convex hull
         made from the points on the interior
   \item The volume that secures a fence side will turn out to be four sphere slices joined together,
-        which we will call a \emph{plume}, where a sphere slice is the intersection of two perpendicular
+        which we will call a \emph{dart}, where a sphere slice is the intersection of two perpendicular
         half planes and a sphere
-  \item A lower bound estimate on the plume volume is a constant proportion of overall grid fence volume
-  \item A non-trivial constant plume volume makes the question of how many neighbors to be expected
+  \item A lower bound estimate on the dart volume is a constant proportion of overall grid fence volume
+  \item A non-trivial constant dart volume makes the question of how many neighbors to be expected
         to secure the overal six sided fence into a coupon collector-like problem, giving us an
         expected finite grid fence size
   \item Finally, approximatations on the four slices bundled together
@@ -522,11 +558,12 @@ $$
 
 Proving the claim.
 
-We want to find the the minimum volume of the plume
+We want to find the the minimum volume of the dart
 for some point inside of a fence of radius $s$ (side length $2s$)
 nested inside of a larger fence of radius $s(2k+1)$ (side length $2s(2k+1)$).
 
-First consider a sphere of radius $R$ centered at $(-D,-D,-D)$ intersected with two
+First consider a sphere of radius $R$, centered at \\
+$(-D,-D,-D)$ intersected with two
 half planes, $H ^ + _ {x=0} = \{ u : u _ x \ge 0 \}$, $H ^ + _ {y=0} = \{ u : u _ y \ge 0 \}$.
 For suitable $R$ and $D$, we want to estimate the volume.
 
@@ -561,7 +598,7 @@ We know that $R \propto (k s)$
 and $D \propto (k s)$, for some $k \in \mathbb{Z}$ and grid cell size $s \in \mathbb{R}$.
 Call $R = \alpha (k s)$ and $D = \beta (k s)$.
 
-The plume will be four slices bundled together sitting inside of a $\gamma^3 (k s)^3$ volume.
+The dart will be four slices bundled together sitting inside of a $\gamma^3 (k s)^3$ volume.
 Take $\alpha, \beta \in \mathbb{R}$ to be the smallest of the four slices:
 
 $$
@@ -574,24 +611,24 @@ $$
 
 as desired.
 
-When choosing random points inside of the larger fence cube, we can think of the plume as the probability
+When choosing random points inside of the larger fence cube, we can think of the dart as the probability
 a single point secures one side of the fence.
 It is equivalent to talk about securing one side of the fence face with securing four posts on each of corners of
 the fence face.
 As a reminder, the Shrinking Posts on Increasing Fence (SPoIF) uses nine posts per face, equally distributed
 along the face square.
 Since there are more opportunities to secure clusters of posts on a fence face,
-in addition to still retaining the features of the plume region, SPoIF will be able to secure the fence cube
+in addition to still retaining the features of the dart region, SPoIF will be able to secure the fence cube
 more quickly.
 We only consider the four post fence here to help simplify the calculation even though it inflates the expected
 number of points we need to see to secure the grid fence.
 
-Take the minimum plume value volume of the six directions and call it $V _ {\text{plume}}$.
-The probability that a point lands in one of the plumes is bounded below by $V _ {\text{plume}} / V _ {\text{fence}}$.
-Of the points that land in one of the plumes, the time we need to take to secure each face of the fence is now
+Take the minimum dart value volume of the six directions and call it $V _ {\text{dart}}$.
+The probability that a point lands in one of the darts is bounded below by $V _ {\text{dart}} / V _ {\text{fence}}$.
+Of the points that land in one of the darts, the time we need to take to secure each face of the fence is now
 a coupon collector-like problem with six coupons.
 
-We can now plug in some real numbers to get coarse bounds on plume volumes, probabilities of landing in the critical region
+We can now plug in some real numbers to get coarse bounds on dart volumes, probabilities of landing in the critical region
 and expected grid sizes.
 
 As a reminder, we are considering a center grid cell, of side length $s$ where the anchor point, $p$,
@@ -602,15 +639,36 @@ The smallest size a slice can be is if the anchor point is on the corner of the 
 nearest to it.
 For example, $p = (s/2,s/2,s/2)$, $q = ( s(k+1/2), s(k + 1/2), s(k+1/2) )$.
 
-In such a case, the center point of the sphere is $(p + q)/2 = ( s(k+1)/2, s(k+1)/2, s(k+1)/2 )$,
-with radIUs $R = |(p+q)/2 - p| = |(sk/2,sk/2,sk/2)| = (\sqrt{3}/2) sk$.
-Here, $D = s(k+1)/2 - s/2 = sk / 2$ with $V _ {\text{fence}} = (s(2k+1))^3$.
+In such a case, the center point of the sphere is:
+
+$$
+(p + q)/2 = ( s(k+1)/2, s(k+1)/2, s(k+1)/2 )
+$$
+
+with radius:
+$$
+\begin{array}{ll}
+  R & = |(p+q)/2 - p| \\
+   & = |(sk/2,sk/2,sk/2)| \\
+   & = (\sqrt{3}/2) sk
+\end{array}
+$$
+
+Here:
+
+$$
+\begin{array}{ll}
+  V _ {\text{fence}} & = (s(2k+1))^3 \\
+  D & = s(k+1)/2 - s/2 \\
+  & = sk / 2 \\
+\end{array}
+$$
 
 This yields:
 
 $$
 \begin{array}{ll}
-  \frac{ V_{\text{plume}} }{ V _ {\text{fence}}} > &  \frac{ \frac{4}{3} ( \frac{\sqrt{3}}{2} sk - \frac{\sqrt{2}}{2} sk)^2 ( \frac{3}{4}s^2 k^2 - \frac{1}{2} s^2 k^2 )^{\frac{1}{2}}  }{  s^3 (2k+1)^3  } \\[10pt]
+  \frac{ V_{\text{dart}} }{ V _ {\text{fence}}} > &  \frac{ \frac{4}{3} ( \frac{\sqrt{3}}{2} sk - \frac{\sqrt{2}}{2} sk)^2 ( \frac{3}{4}s^2 k^2 - \frac{1}{2} s^2 k^2 )^{\frac{1}{2}}  }{  s^3 (2k+1)^3  } \\[10pt]
   = & \frac{ s^3 k^3 ( \sqrt{3} - \sqrt{2} )^2 }{ 3 \sqrt{2} s^3 (2k+1)^3 } \\[10pt]
   = & \frac{ ( \sqrt{3} - \sqrt{2} )^2 }{ 3 \sqrt{2} (2+\frac{1}{k})^3 } \\[10pt]
   > & \frac{ ( \sqrt{3} - \sqrt{2} )^2 }{ 81 \sqrt{2}  } \ \ \ \ \ \ \ \ (k \ge 1) \\[10pt]
@@ -618,12 +676,12 @@ $$
 \end{array}
 $$
 
-For points that land within one of the six plume region, we would expect this to be be a six coupon collector
+For points that land within one of the six dart region, we would expect this to be be a six coupon collector
 problem with, at worst, equal probability.
-The coupon collector problem grows roghly as $n \log(n)$  which, in our case of six sides of the fence to secure,
+The coupon collector problem grows roughly as $n \log(n)$  which, in our case of six sides of the fence to secure,
 gives us an expected $11$ or more points before we secure the fence.
 
-Each point has roughly a $6 / 1198$ chance of landing in one of the six plumes, so we would expect
+Each point has roughly a $6 / 1198$ chance of landing in one of the six darts, so we would expect
 roughly $11 / (6 / 1198) = 2196.3\dots$ number of points within the grid fence to appear before
 securing the fence.
 
@@ -632,8 +690,9 @@ be
 
 $$
 \begin{array}{ll}
-  & (11 \cdot 1198 / 6)^{\frac{1}{3}} \\[10pt]
-  = &  12.9\ldots \sim 13 \\[10pt]
+  & (11 \cdot 1198 / 6)^{\frac{1}{3}} \\
+  & = 12.9\ldots \\
+  & \sim 13 \\
 \end{array}
 $$
 

@@ -530,15 +530,23 @@ Clusters that fall out of bounds are marked as secured.
 Figure \ref{TK} shows an example highlighting the posts on a bounding cube face,
 its clusters, partitions and invalid partial partitions.
 
-The auxiliary function, $\text{GridPerimeterCellPoints}(B,p,R)$ returns points within the grid, $B$,
+The auxiliary function, \emph{GridPerimeterCellPoints},
+%$\text{GridPerimeterCellPoints}(B,p,R)$
+returns points within the grid, $B$,
 centered at the grid cell that $p$ resides in and that lie an integral $R$ distance away.
 The list of points within the enumeration the shell of cells at distance $R$ is returned, with cells
 falling completely out of bounds skipped over.
-A small note that the initial call of $\text{GridPerimeterCellPoints}(B,p,0)$ needs to exclude anchor point,
+A small note that the initial call of
+%$\text{GridPerimeterCellPoints}(B,p,0)$
+\emph{GridPerimeterCellPoints}
+needs to exclude anchor point,
 $p$, as the starting grid cell will include the anchor point in question.
 
 In the worst case, Algorithm \ref{alg:RNGpSPoIF} will iterate until it encompases all points within the grid
-when the $\text{FencePostCluster}[]$ has fallen completely out of bounds.
+when the
+%$\text{FencePostCluster}[]$
+\emph{FencePostCluster}
+has fallen completely out of bounds.
 In such a case, Algorithm \ref{alg:RNGPointNaive} is run on all points and is equivalent to the degenerate
 condition of running a naive $O(n^2)$ relative neighborhood graph computation on all neighbor points to an
 anchor point.

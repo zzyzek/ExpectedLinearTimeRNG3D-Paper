@@ -243,6 +243,25 @@ function show_frame() {
 // #78a50a
 // #ffa600
 
+// https://carbondesignsystem.com/data-visualization/color-palettes/
+//
+var DPAL = [
+  "#8a3ffc",
+  "#33b1ff",
+  "#007d79",
+  "#ff7eb6",
+  "#fa4d56",
+  "#fff1f1",
+  "#6fdc8c",
+  "#4589ff",
+  "#d12771",
+  "#d2a106",
+  "#08bdba",
+  "#bae6ff",
+  "#ba4e00",
+  "#d4bbff"
+];
+
 function fig_lune() {
   let two = g_fig_ctx.two;
 
@@ -267,6 +286,11 @@ function fig_lune() {
   _co_highlight = "#ffa600";
   _co_highlight = "#fa4d56";
 
+  _co_highlight = "#33b1ff";
+  _co_highlight = "#bae6ff";
+
+  _co_highlight = DPAL[11];
+
 
   let _r = 6;
 
@@ -280,7 +304,8 @@ function fig_lune() {
   W = [480,170];
 
 
-  mklune(P,W, "#fff1f1");
+  //mklune(P,W, "#fff1f1");
+  mklune(P,W, DPAL[5]);
 
   let dpw = njs.sub( W, P );
   let lpw = njs.norm2( dpw );
@@ -306,19 +331,12 @@ function fig_lune() {
   let _cr0 = two.makeLine( cross_pos[0] - _cl, cross_pos[1] - _cl, cross_pos[0] + _cl, cross_pos[1] + _cl );
   _cr0.linewidth = 2.5;
   _cr0.fill = "#d12771";
-  _cr0.stroke = "#d12771";
-  _cr0.stroke = "#ff7eb6";
-  _cr0.stroke = "#ba4e00";
-  _cr0.stroke = "#fa4d56";
+  _cr0.stroke = DPAL[4];
 
   let _cr1 = two.makeLine( cross_pos[0] - _cl, cross_pos[1] + _cl, cross_pos[0] + _cl, cross_pos[1] - _cl );
   _cr1.linewidth = 2.5;
   _cr1.fill = "#d12771";
-  _cr1.stroke = "#d12771";
-  _cr1.stroke = "#d2a106";
-  _cr1.stroke = "#ff7eb6";
-  _cr1.stroke = "#ba4e00";
-  _cr1.stroke = "#fa4d56";
+  _cr1.stroke = DPAL[4];
 
 
   /*
@@ -351,7 +369,16 @@ function fig_lune() {
   _pB.opacity = 0.75;
   _pB.dashes = [5,5];
 
-  mklune(P,Q, "#6fdc8c");
+  let _qq = two.makeCircle( Q[0], Q[1], 2*_r );
+  _qq.fill = DPAL[3];
+  _qq.linewidth = 1.2;
+  _qq.stroke = DPAL[3];
+  //_q.fill = _co_grey;
+
+
+
+  //mklune(P,Q, "#6fdc8c");
+  mklune(P,Q, DPAL[6]);
 
   /*
   let _qB = two.makeCircle( Q[0], Q[1], lpq );

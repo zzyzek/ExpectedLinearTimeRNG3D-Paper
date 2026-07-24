@@ -163,6 +163,62 @@ function mathjax2twojs(_id,x,y,s,s_sub) {
   two.update();
 }
 
+function mklune(p,q, co) {
+  let two = g_fig_ctx.two;
+
+  let nseg = 32;
+
+  let dpq = njs.sub(q,p);
+  let lpq = njs.norm2(dpq);
+
+  let theta = Math.atan2(dpq[1], dpq[0]);
+
+  let pnt = [];
+  let rpnt = [];
+  for (let i=0; i<nseg; i++) {
+    let t = (i/nseg);
+    let a = ((theta - (Math.PI/4))*t) + ((1-t)*(theta + (Math.PI/4)));
+
+    a = (-t*Math.PI/3) + ((1-t)*Math.PI/3);
+
+    let c = Math.cos(a);
+    let s = Math.sin(a);
+
+    let v = [ (c*dpq[0]) - (s*dpq[1]), (s*dpq[0]) + (c*dpq[1]) ]
+    pnt.push( njs.add(p, v) );
+
+    let u = [ (-c*dpq[0]) + (s*dpq[1]), (-s*dpq[0]) - (c*dpq[1]) ]
+    rpnt.push( njs.add(q, u) );
+
+
+    //two.makeCircle( pnt[i][0], pnt[i][1], 4 + (2*i/nseg)  );
+    //two.makeCircle( rpnt[i][0], rpnt[i][1], 4 + (2*i/nseg)  );
+
+  }
+
+  for (let i=0; i<rpnt.length; i++) { pnt.push( rpnt[i] ); }
+
+  let aa = makeTwoAnchor(pnt);
+
+  let _path = two.makePath( aa );
+
+  _path.noStroke();
+
+  if (typeof co !== "undefined") {
+    _path.fill = co;
+  }
+  /*
+  _path.fill = "rgb(100,50,50)";
+  _path.fill = "#594e90";
+  _path.fill = "#78a50a";
+  _path.fill = "#65a31c";
+  _path.fill = "#6fdc8c";
+  */
+
+
+
+}
+
 //--------------------
 //--------------------
 //--------------------
@@ -174,6 +230,18 @@ function show_frame() {
   let rect = two.makeRectangle( two.width/2, two.height/2, two.width, two.height )
   rect.lineWidth = 2;
 }
+
+// #003f5c (blue)
+// #494e90 (dark blue/purple)
+// #bc4c96 (lighter purple)
+// #ff5f66 (red)
+// #ffa600 (orange)
+
+// #003f5c
+// #006572
+// #008b56
+// #78a50a
+// #ffa600
 
 function fig_lune() {
   let two = g_fig_ctx.two;
@@ -194,6 +262,10 @@ function fig_lune() {
   _co_highlight = "rgb(201,62,52)";
   _co_highlight = '#FFB74D';
   _co_highlight = '#AD1457';
+  _co_highlight = "rgb(193,39,45)";
+  _co_highlight = "#ff5f66";
+  _co_highlight = "#ffa600";
+  _co_highlight = "#fa4d56";
 
 
   let _r = 6;
@@ -208,6 +280,7 @@ function fig_lune() {
   W = [480,170];
 
 
+  mklune(P,W, "#fff1f1");
 
   let dpw = njs.sub( W, P );
   let lpw = njs.norm2( dpw );
@@ -218,6 +291,35 @@ function fig_lune() {
   _cpw.linewidth = 2;
   _cpw.opacity = 0.75;
   _cpw.dashes = [5,5];
+
+  let dwp = njs.sub( P, W );
+
+  let _xxline = two.makeLine( W[0], W[1], W[0] + (dwp[0]/4), W[1] + (dwp[1]/4) );
+  _xxline.fill = _co_solid;
+  _xxline.cap = "round";
+  _xxline.linewidth = 3;
+  _xxline.dashes = [4,8];
+  _xxline.stroke = _co_solid;
+
+  let _cl = 5;
+  let cross_pos = [ W[0] + (1.05*dwp[0]/4), W[1] + (1.05*dwp[1]/4) ];
+  let _cr0 = two.makeLine( cross_pos[0] - _cl, cross_pos[1] - _cl, cross_pos[0] + _cl, cross_pos[1] + _cl );
+  _cr0.linewidth = 2.5;
+  _cr0.fill = "#d12771";
+  _cr0.stroke = "#d12771";
+  _cr0.stroke = "#ff7eb6";
+  _cr0.stroke = "#ba4e00";
+  _cr0.stroke = "#fa4d56";
+
+  let _cr1 = two.makeLine( cross_pos[0] - _cl, cross_pos[1] + _cl, cross_pos[0] + _cl, cross_pos[1] - _cl );
+  _cr1.linewidth = 2.5;
+  _cr1.fill = "#d12771";
+  _cr1.stroke = "#d12771";
+  _cr1.stroke = "#d2a106";
+  _cr1.stroke = "#ff7eb6";
+  _cr1.stroke = "#ba4e00";
+  _cr1.stroke = "#fa4d56";
+
 
   /*
   let theta_pw = Math.atan2( dpw[1], dpw[0] );
@@ -239,7 +341,6 @@ function fig_lune() {
   _s3.dashes = [5,5];
 
 
-
   let dpq = njs.sub( Q, P );
   let lpq = njs.norm2( dpq );
 
@@ -249,6 +350,8 @@ function fig_lune() {
   _pB.linewidth = 2;
   _pB.opacity = 0.75;
   _pB.dashes = [5,5];
+
+  mklune(P,Q, "#6fdc8c");
 
   /*
   let _qB = two.makeCircle( Q[0], Q[1], lpq );
@@ -305,6 +408,8 @@ function fig_lune() {
   _p.fill = _co_solid;
   _p.linewidth = 1.2;
   _p.stroke = _co_highlight;
+
+  _p.stroke = _co_solid;
   _p.fill = _co_highlight;
 
   let _q = two.makeCircle( Q[0], Q[1], _r );

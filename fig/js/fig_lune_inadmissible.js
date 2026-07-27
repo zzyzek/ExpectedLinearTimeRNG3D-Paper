@@ -173,6 +173,8 @@ function mklune(p,q, co) {
 
   let theta = Math.atan2(dpq[1], dpq[0]);
 
+  let top_pnt = [];
+
   let pnt = [];
   let rpnt = [];
   for (let i=0; i<nseg; i++) {
@@ -186,6 +188,8 @@ function mklune(p,q, co) {
 
     let v = [ (c*dpq[0]) - (s*dpq[1]), (s*dpq[0]) + (c*dpq[1]) ]
     pnt.push( njs.add(p, v) );
+
+    top_pnt.push( pnt[i] );
 
     let u = [ (-c*dpq[0]) + (s*dpq[1]), (-s*dpq[0]) - (c*dpq[1]) ]
     rpnt.push( njs.add(q, u) );
@@ -215,6 +219,22 @@ function mklune(p,q, co) {
   _path.fill = "#6fdc8c";
   */
 
+
+  //DEBUG
+  //we should put this not here.
+  //we're just testing it out here because it's simpler, for now
+  // TODO
+  // this is not uniform along the top of the lune...
+  // need to check it out...
+  //
+  for (let i=0; i<top_pnt.length; i++) {
+
+    if ((i%3) == 0) {
+    let p = top_pnt[i];
+    let pp = njs.add( top_pnt[i], [18,-40] );
+    let _l = two.makeLine( p[0], p[1], pp[0], pp[1] );
+    }
+  }
 
 
 }
@@ -407,7 +427,9 @@ function fig_lune() {
   let mpq = [ (P[0] + Q[0])/2.0, (P[1] + Q[1])/2.0 ];
   let Npq = njs.mul( 1.0 / njs.norm2(dpq), dpq );
 
-  let ortho = [ -dpq[1], dpq[0] ];
+  // right line
+  //
+  let ortho = njs.mul( 1.25, [ -dpq[1], dpq[0] ] );
   let Northo = njs.mul( 1.0 / njs.norm2(ortho), ortho );
   let mpq0 = njs.add( mpq, njs.mul( Math.sqrt(3)*lpq/2, Northo ) );
   let _l0 = two.makeLine( mpq0[0] , mpq0[1] ,
@@ -417,6 +439,20 @@ function fig_lune() {
   _l0.linewidth = 3;
   _l0.opacity = 1;
 
+  let _nseg = 10;
+  for (let i=1; i<=_nseg; i++) {
+    let p = njs.add( mpq0, njs.mul( (i/_nseg), ortho ) );
+    let pp = njs.add( p, [6, -40 ] );
+
+    let _ll = two.makeLine( p[0], p[1], pp[0], pp[1] );
+    _ll.fill = "rgb(20,20,20)";
+    _ll.stroke = "rgb(20,20,20)";
+    _ll.linewidth = 2.5;
+    _ll.opacity = 1;
+  }
+
+  // left line
+  //
   let mpq1 = njs.add( mpq, njs.mul( -Math.sqrt(3)*lpq/2, Northo ) );
   let _l1 = two.makeLine( mpq1[0] , mpq1[1] ,
                           mpq1[0] - ortho[0], mpq1[1] - ortho[1] );
@@ -426,7 +462,21 @@ function fig_lune() {
   _l1.opacity = 1;
 
 
+  for (let i=0; i<=_nseg; i++) {
+    let p = njs.add( mpq1, njs.mul( -(i/_nseg), ortho ) );
+    let pp = njs.add( p, [6, -40 ] );
 
+    let _ll = two.makeLine( p[0], p[1], pp[0], pp[1] );
+    _ll.fill = "rgb(20,20,20)";
+    _ll.stroke = "rgb(20,20,20)";
+    _ll.linewidth = 2.5;
+    _ll.opacity = 1;
+  }
+
+  //---
+
+  // dashed circles
+  //
   let _p = two.makeCircle( P[0], P[1], _r );
   _p.fill = _co_solid;
   _p.linewidth = 1.2;

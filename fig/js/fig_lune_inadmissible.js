@@ -163,6 +163,76 @@ function mathjax2twojs(_id,x,y,s,s_sub) {
   two.update();
 }
 
+function mk_hatching_half_lune(p,q) {
+  let two = g_fig_ctx.two;
+
+  let ds = 3;
+
+  let nseg = 32;
+
+  let dpq = njs.sub(q,p);
+  let lpq = njs.norm2(dpq);
+
+  let Npq = njs.mul( 1 / lpq, dpq );
+  let ortho = [ -Npq[1], Npq[0] ];
+
+  let mpq = njs.add(p, njs.mul(1/2, dpq));
+
+  let theta = Math.atan2(dpq[1], dpq[0]);
+
+  let L = lpq*Math.sqrt(3)/2;
+
+  let top_pnt = [];
+
+  let alpha = njs.add( mpq, njs.mul( L, ortho));
+  let beta  = njs.add( mpq, njs.mul(-L, ortho));
+
+  //WIP!!!!
+
+  let pnt = [];
+  let rpnt = [];
+  for (let i=0; i<nseg; i++) {
+    let t = (i/nseg);
+
+    let _u = njs.add(
+      njs.mul(t, alpha),
+      njs.mul(1-t, beta)
+    );
+
+    top_pnt.push( _u );
+
+    console.log(top_pnt[i]);
+    continue;
+
+    let a = ((theta - (Math.PI/4))*t) + ((1-t)*(theta + (Math.PI/4)));
+
+    a = (-t*Math.PI/3) + ((1-t)*Math.PI/3);
+
+    let c = Math.cos(a);
+    let s = Math.sin(a);
+
+    let v = [ (c*dpq[0]) - (s*dpq[1]), (s*dpq[0]) + (c*dpq[1]) ]
+    top_pnt.push( njs.add(p, v) );
+  }
+
+
+  for (let i=0; i<top_pnt.length; i++) {
+    if ((i%3) == 0) {
+      let p = top_pnt[i];
+      //let pp = njs.add( top_pnt[i], [18,-40] );
+      let pp = njs.add( top_pnt[i], njs.mul(30, Npq) );
+      let _l = two.makeLine( p[0], p[1], pp[0], pp[1] );
+      _l.linewidth = 2.5;
+      _l.linewidth = 1;
+      _l.fill = "rgb(20,20,20)";
+      _l.stroke = "rgb(20,20,20)";
+      _l.cap = "round";
+    }
+  }
+
+
+}
+
 function mklune(p,q, co) {
   let two = g_fig_ctx.two;
 
@@ -227,6 +297,7 @@ function mklune(p,q, co) {
   // this is not uniform along the top of the lune...
   // need to check it out...
   //
+  /*
   for (let i=0; i<top_pnt.length; i++) {
 
     if ((i%3) == 0) {
@@ -235,6 +306,7 @@ function mklune(p,q, co) {
     let _l = two.makeLine( p[0], p[1], pp[0], pp[1] );
     }
   }
+  */
 
 
 }
@@ -324,6 +396,7 @@ function fig_lune() {
   W = [480,170];
 
 
+  /*
   //mklune(P,W, "#fff1f1");
   mklune(P,W, DPAL[5]);
 
@@ -338,41 +411,10 @@ function fig_lune() {
   _cpw.dashes = [5,5];
 
   let dwp = njs.sub( P, W );
-
-  /*
-  let _xxline = two.makeLine( W[0], W[1], W[0] + (dwp[0]/4), W[1] + (dwp[1]/4) );
-  _xxline.fill = _co_solid;
-  _xxline.cap = "round";
-  _xxline.linewidth = 3;
-  _xxline.dashes = [4,8];
-  _xxline.stroke = _co_solid;
-*/
-
-  /*
-  let _cl = 5;
-  let cross_pos = [ W[0] + (1.05*dwp[0]/4), W[1] + (1.05*dwp[1]/4) ];
-  let _cr0 = two.makeLine( cross_pos[0] - _cl, cross_pos[1] - _cl, cross_pos[0] + _cl, cross_pos[1] + _cl );
-  _cr0.linewidth = 2.5;
-  _cr0.fill = "#d12771";
-  _cr0.stroke = DPAL[4];
-
-  let _cr1 = two.makeLine( cross_pos[0] - _cl, cross_pos[1] + _cl, cross_pos[0] + _cl, cross_pos[1] - _cl );
-  _cr1.linewidth = 2.5;
-  _cr1.fill = "#d12771";
-  _cr1.stroke = DPAL[4];
-*/
-
-
-  /*
-  let theta_pw = Math.atan2( dpw[1], dpw[0] );
-  let _s2 = two.makeArcSegment( P[0], P[1], lpw-0, lpw+0, theta_pw + Math.PI/3, theta_pw - Math.PI/3 );
-  //_s2.fill = "rgb(220,220,220)";
-  _s2.linewidth = 1;
-  _s2.stroke = _co_faded;
-  _s2.opacity = 0.75;
-  _s2.dashes = [5,5];
   */
 
+
+  /*
 
   let theta_wp = Math.atan2( -dpw[1], -dpw[0] );
   let _s3 = two.makeArcSegment( W[0], W[1], lpw-0, lpw+0, theta_wp + Math.PI/3, theta_wp - Math.PI/3 );
@@ -381,6 +423,7 @@ function fig_lune() {
   _s3.stroke = _co_faded;
   _s3.opacity = 0.75;
   _s3.dashes = [5,5];
+  */
 
 
   let dpq = njs.sub( Q, P );
@@ -394,6 +437,8 @@ function fig_lune() {
   _pB.dashes = [5,5];
 
   mklune(P,Q, DPAL[6]);
+
+  mk_hatching_half_lune(P,Q);
 
 
   let _p_txt = two.makeText( "p", P[0]-14, P[1]+10, style );
@@ -439,16 +484,21 @@ function fig_lune() {
   _l0.linewidth = 3;
   _l0.opacity = 1;
 
+  // hatching...
+  //
+
   let _nseg = 10;
   for (let i=1; i<=_nseg; i++) {
     let p = njs.add( mpq0, njs.mul( (i/_nseg), ortho ) );
-    let pp = njs.add( p, [6, -40 ] );
+    //let pp = njs.add( p, [6, -40 ] );
+    let pp = njs.add( p, njs.mul(30, Npq) );
 
     let _ll = two.makeLine( p[0], p[1], pp[0], pp[1] );
     _ll.fill = "rgb(20,20,20)";
     _ll.stroke = "rgb(20,20,20)";
     _ll.linewidth = 2.5;
     _ll.opacity = 1;
+    _ll.cap = "round";
   }
 
   // left line
@@ -464,18 +514,20 @@ function fig_lune() {
 
   for (let i=0; i<=_nseg; i++) {
     let p = njs.add( mpq1, njs.mul( -(i/_nseg), ortho ) );
-    let pp = njs.add( p, [6, -40 ] );
+    //let pp = njs.add( p, [6, -40 ] );
+    let pp = njs.add( p, njs.mul(30, Npq) );
 
     let _ll = two.makeLine( p[0], p[1], pp[0], pp[1] );
     _ll.fill = "rgb(20,20,20)";
     _ll.stroke = "rgb(20,20,20)";
     _ll.linewidth = 2.5;
     _ll.opacity = 1;
+    _ll.cap = "round";
   }
 
   //---
 
-  // dashed circles
+  // filled in graphical points for points p,q,w
   //
   let _p = two.makeCircle( P[0], P[1], _r );
   _p.fill = _co_solid;

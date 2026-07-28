@@ -18,7 +18,15 @@
 // I'm tired of fighting with Firefox so I'm moving on as Inkscape works just fine.
 //
 
+// todo:
+// color inadmissible side
+// draw line from p to q (dashed)
+//
+
 var njs = numeric;
+
+var HATCH_LW = 1.5;
+var HATCH_LEN = 45;
 
 var g_fig_ctx = {
   "html_id":"fig",
@@ -168,7 +176,7 @@ function mk_hatching_half_lune(p,q) {
 
   let ds = 3;
 
-  let nseg = 32;
+  let nseg = 42;
 
   let dpq = njs.sub(q,p);
   let lpq = njs.norm2(dpq);
@@ -187,11 +195,11 @@ function mk_hatching_half_lune(p,q) {
   let alpha = njs.add( mpq, njs.mul( L, ortho));
   let beta  = njs.add( mpq, njs.mul(-L, ortho));
 
-  //WIP!!!!
+  let _R = lpq;
 
   let pnt = [];
   let rpnt = [];
-  for (let i=0; i<nseg; i++) {
+  for (let i=0; i<=nseg; i++) {
     let t = (i/nseg);
 
     let _u = njs.add(
@@ -199,20 +207,18 @@ function mk_hatching_half_lune(p,q) {
       njs.mul(1-t, beta)
     );
 
-    top_pnt.push( _u );
+    let _dx = njs.norm2( njs.sub(_u, mpq) );
+    let _as = Math.asin(_dx/_R);
 
-    console.log(top_pnt[i]);
-    continue;
+    let h = 0;
+    if (_dx < (1/10000)) { h = _R/2; }
+    else {
+      h = (_dx / Math.tan(Math.asin(_dx/_R))) - (_R/2);
+    }
 
-    let a = ((theta - (Math.PI/4))*t) + ((1-t)*(theta + (Math.PI/4)));
+    //console.log("h:", h, _dx, _R, _dx/_R, Math.asin(_dx/_R));
 
-    a = (-t*Math.PI/3) + ((1-t)*Math.PI/3);
-
-    let c = Math.cos(a);
-    let s = Math.sin(a);
-
-    let v = [ (c*dpq[0]) - (s*dpq[1]), (s*dpq[0]) + (c*dpq[1]) ]
-    top_pnt.push( njs.add(p, v) );
+    top_pnt.push( njs.add( _u, njs.mul( h, Npq) ) );
   }
 
 
@@ -220,10 +226,10 @@ function mk_hatching_half_lune(p,q) {
     if ((i%3) == 0) {
       let p = top_pnt[i];
       //let pp = njs.add( top_pnt[i], [18,-40] );
-      let pp = njs.add( top_pnt[i], njs.mul(30, Npq) );
+      let pp = njs.add( top_pnt[i], njs.mul(HATCH_LEN, Npq) );
       let _l = two.makeLine( p[0], p[1], pp[0], pp[1] );
       _l.linewidth = 2.5;
-      _l.linewidth = 1;
+      _l.linewidth = HATCH_LW;
       _l.fill = "rgb(20,20,20)";
       _l.stroke = "rgb(20,20,20)";
       _l.cap = "round";
@@ -436,7 +442,7 @@ function fig_lune() {
   _pB.opacity = 0.75;
   _pB.dashes = [5,5];
 
-  mklune(P,Q, DPAL[6]);
+  //mklune(P,Q, DPAL[6]);
 
   mk_hatching_half_lune(P,Q);
 
@@ -467,6 +473,7 @@ function fig_lune() {
   _s1.linewidth = 1;
   _s1.stroke = "rgb(20,20,20)";
   _s1.opacity = 0.75;
+  //_s1.dashes = [8,8];
 
 
   let mpq = [ (P[0] + Q[0])/2.0, (P[1] + Q[1])/2.0 ];
@@ -491,12 +498,13 @@ function fig_lune() {
   for (let i=1; i<=_nseg; i++) {
     let p = njs.add( mpq0, njs.mul( (i/_nseg), ortho ) );
     //let pp = njs.add( p, [6, -40 ] );
-    let pp = njs.add( p, njs.mul(30, Npq) );
+    let pp = njs.add( p, njs.mul(HATCH_LEN, Npq) );
 
     let _ll = two.makeLine( p[0], p[1], pp[0], pp[1] );
     _ll.fill = "rgb(20,20,20)";
     _ll.stroke = "rgb(20,20,20)";
     _ll.linewidth = 2.5;
+    _ll.linewidth = HATCH_LW;
     _ll.opacity = 1;
     _ll.cap = "round";
   }
@@ -515,12 +523,13 @@ function fig_lune() {
   for (let i=0; i<=_nseg; i++) {
     let p = njs.add( mpq1, njs.mul( -(i/_nseg), ortho ) );
     //let pp = njs.add( p, [6, -40 ] );
-    let pp = njs.add( p, njs.mul(30, Npq) );
+    let pp = njs.add( p, njs.mul(HATCH_LEN, Npq) );
 
     let _ll = two.makeLine( p[0], p[1], pp[0], pp[1] );
     _ll.fill = "rgb(20,20,20)";
     _ll.stroke = "rgb(20,20,20)";
     _ll.linewidth = 2.5;
+    _ll.linewidth = HATCH_LW;
     _ll.opacity = 1;
     _ll.cap = "round";
   }

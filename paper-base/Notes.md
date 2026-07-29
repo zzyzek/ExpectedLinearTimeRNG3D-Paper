@@ -56,7 +56,7 @@ The figures are the ones that will describe how the algorithm works.
   - secure fence
   - extend fence
   - naive rng
-* securing fence graphic
+* securing fence graphic (see fence sketch in notes directory)
   - show cutting plane that secures cluster of posts
   - shows cutting plane that partiall cleaves a cluster (and so doesn't secure
 * comic showing outline of math foundations
@@ -65,5 +65,5 @@ The figures are the ones that will describe how the algorithm works.
   - fence, to
   - extended fence, to
   - (naive rng?)
-* sabotage point in extended region that precludes connection in-region
+* sabotage point in extended region that precludes connection in-region (`fig_sabotage`)
 * graphic of fence and cluster?

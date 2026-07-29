@@ -237,6 +237,7 @@ function fig_sabotage() {
   let _f = 20000;
 
   let ds = (1/100)*_f;
+  ds = (1/160)*_f;
 
   let z = njs.mul(_f, [.655,-.815]);
   let P = njs.mul(_f, [0.659538,-0.811543]);
@@ -264,8 +265,8 @@ function fig_sabotage() {
 
 
   //two.makeRectangle( z[0], z[1], 4*ds, 4*ds);
+  two.makeRectangle( z[0], z[1], 5*ds, 5*ds);
   two.makeRectangle( z[0], z[1], 3*ds, 3*ds);
-  two.makeRectangle( z[0], z[1], 2*ds, 2*ds);
   two.makeRectangle( z[0], z[1], ds, ds);
 
   let _pq = njs.sub(Q,P);

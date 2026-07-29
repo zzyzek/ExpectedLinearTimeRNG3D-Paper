@@ -1,0 +1,537 @@
+// LICENSE: CC0
+//
+
+// inkscape doesn't respect rgba in fill or stroke,
+// which is the main method of two.js to do it.
+// As a hacky way to make sure it's inkscape compatible,
+// the _dl() function will do a post processing step
+// of going through each element and converting fill, stroke
+// and linearGradient stop components with an rgba value
+// to an rgb value with the appropriate 'opacity' portion
+// set.
+//
+
+// Note on Libertine font,
+// Chrome displays it, Inkscape displays it (using 'Linux Libertine O')
+// but Firefox shits the bed for some reason.
+// It looks like all font-family in `text` elements that have a space don't work.
+// I'm tired of fighting with Firefox so I'm moving on as Inkscape works just fine.
+//
+
+// todo:
+// color inadmissible side
+// draw line from p to q (dashed)
+//
+
+var njs = numeric;
+
+var HATCH_LW = 1.5;
+var HATCH_LEN = 45;
+
+var g_fig_ctx = {
+  "html_id":"fig",
+  "two": new Two({fitted:true})
+};
+
+
+//--------------------
+//--------------------
+//--------------------
+//--------------------
+// auxiliary functions
+
+// 3d cross product.
+//
+function cross3(p,q) {
+  let c0 = ((p[1]*q[2]) - (p[2]*q[1])),
+      c1 = ((p[2]*q[0]) - (p[0]*q[2])),
+      c2 = ((p[0]*q[1]) - (p[1]*q[0]));
+
+  return [c0,c1,c2];
+}
+
+
+// euler rotation or olinde rodrigues
+// https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+//
+function rodrigues(v0, _vr, theta) {
+  let c = Math.cos(theta);
+  let s = Math.sin(theta);
+  let v_r = njs.mul( 1 / njs.norm2(_vr), _vr );
+  return njs.add(
+    njs.mul(c, v0),
+    njs.add(
+      njs.mul( s, cross3(v_r,v0)),
+      njs.mul( (1-c) * njs.dot(v_r, v0), v_r )
+    )
+  );
+}
+
+function toRGBAa(rgba) {
+  let va = rgba.split(")")[0].split("(")[1].split(",");
+  if (rgba.match( /^rgba\(/ )) { return va; }
+  va.push(1);
+  return va;
+}
+
+function _dl() {
+  var ele = document.getElementById("ui_canvas");
+  let svg_txt = ele.innerHTML;
+  var b = new Blob([ svg_txt ]);
+  saveAs(b, "fig.svg");
+}
+
+function makeTwoVector(_pnt) {
+  let pnt = [];
+  for (let ii=0; ii<_pnt.length; ii++) {
+    pnt.push( new Two.Vector(_pnt[ii][0], _pnt[ii][1]) );
+  }
+  return pnt;
+}
+
+function makeTwoAnchor(_pnt) {
+  let pnt = [];
+  for (let ii=0; ii<_pnt.length; ii++) {
+    pnt.push( new Two.Anchor(_pnt[ii][0], _pnt[ii][1]) );
+  }
+  return pnt;
+}
+
+// so very hacky
+// somehow we managed to shoehorn
+// mathjax notation into svg so that it
+// can be used by two.js.
+// We need to contort ourselves to get the mask
+// right so that it gets all the element
+//
+function mathjax2twojs(_id,x,y,s,s_sub) {
+  s = ((typeof s === "undefined") ? 0.02 : s);
+  s_sub = ((typeof s_sub === "undefined") ? 0.7 : s_sub);
+
+  let two = g_fig_ctx.two;
+
+  let ele = document.querySelector("#" + _id + " svg");
+  let ser = new XMLSerializer();
+  let str = ser.serializeToString(ele);
+
+  let parser = new DOMParser();
+  let sge = parser.parseFromString(str, "image/svg+xml").documentElement;
+
+  let sgr = two.interpret(sge);
+
+  sgr.position.x = x;
+  sgr.position.y = y;
+  sgr.scale.x =  s;
+  sgr.scale.y = -s;
+
+  debug.push(sgr);
+
+  // rescale subscript HACK
+  //
+  if (_id.slice(0,2) == "m_") {
+
+    if (true) {
+
+    if (sgr.children.length > 0) {
+    if (sgr.children[0].children.length > 0) {
+    if (sgr.children[0].children[0].children.length > 1) {
+    if (sgr.children[0].children[0].children[1].children.length > 1) {
+        sgr.children[0].children[0].children[1].children[1].scale.x = s_sub;
+        sgr.children[0].children[0].children[1].children[1].scale.y = s_sub;
+    }
+    }
+    }
+    }
+
+    }
+  }
+  else {
+
+    if (sgr.children.length > 0) {
+    if (sgr.children[0].children.length > 0) {
+    if (sgr.children[0].children[0].children.length > 0) {
+    if (sgr.children[0].children[0].children[0].children.length > 1) {
+        sgr.children[0].children[0].children[0].children[1].scale.x = s_sub;
+        sgr.children[0].children[0].children[0].children[1].scale.y = s_sub;
+    }
+    }
+    }
+    }
+
+  }
+
+  //yep, needed, so we can then get the make element
+  //
+  two.update();
+
+  let mask = document.getElementById(sgr.mask.id);
+  //mask.firstChild.setAttribute("d", "M -10000 -10000 L 10000 -10000 L 10000 10000 L -10000 10000 Z");
+  mask.firstChild.setAttribute("d", "M -4000 -4000 L 4000 -4000 L 4000 4000 L -4000 4000 Z");
+
+  two.update();
+}
+
+function mk_hatching_half_lune(p,q) {
+  let two = g_fig_ctx.two;
+
+  let ds = 3;
+
+  let nseg = 15;
+
+  let dpq = njs.sub(q,p);
+  let lpq = njs.norm2(dpq);
+
+  let Npq = njs.mul( 1 / lpq, dpq );
+  let ortho = [ -Npq[1], Npq[0] ];
+
+  let mpq = njs.add(p, njs.mul(1/2, dpq));
+
+  let theta = Math.atan2(dpq[1], dpq[0]);
+
+  let L = lpq*Math.sqrt(3)/2;
+
+  let top_pnt = [];
+  let inv_lune = [];
+
+  let alpha = njs.add( mpq, njs.mul( L, ortho));
+  let beta  = njs.add( mpq, njs.mul(-L, ortho));
+
+  let _R = lpq;
+
+
+  for (let i=0; i<=nseg; i++) {
+    let t = (i/nseg);
+
+    let _u = njs.add(
+      njs.mul(t, alpha),
+      njs.mul(1-t, beta)
+    );
+
+    let _dx = njs.norm2( njs.sub(_u, mpq) );
+    let _as = Math.asin(_dx/_R);
+
+    let h = 0;
+    if (_dx < (1/10000)) { h = _R/2; }
+    else {
+      h = (_dx / Math.tan(Math.asin(_dx/_R))) - (_R/2);
+    }
+
+    top_pnt.push( njs.add( _u, njs.mul( h, Npq) ) );
+    inv_lune.push( top_pnt[i] );
+  }
+
+  inv_lune.push( njs.add(mpq, njs.mul( 1000, ortho )) );
+  inv_lune.push( [800, -10] );
+  inv_lune.push( njs.add(mpq, njs.mul( -1000, ortho )) );
+
+  let aa = makeTwoAnchor( inv_lune );
+  let _path = two.makePath( aa );
+  _path.fill = "#fff1f1";
+  _path.fill = "#d2a106";
+  _path.fill = "#ff7eb6";
+
+
+
+  for (let i=0; i<top_pnt.length; i++) {
+    let p = top_pnt[i];
+    //let pp = njs.add( top_pnt[i], [18,-40] );
+    let pp = njs.add( top_pnt[i], njs.mul(HATCH_LEN, Npq) );
+    let _l = two.makeLine( p[0], p[1], pp[0], pp[1] );
+    _l.linewidth = 2.5;
+    _l.linewidth = HATCH_LW;
+    _l.fill = "rgb(20,20,20)";
+    _l.stroke = "rgb(20,20,20)";
+    _l.cap = "round";
+  }
+
+
+
+}
+
+function mklune(p,q, co) {
+  let two = g_fig_ctx.two;
+
+  let nseg = 32;
+
+  let dpq = njs.sub(q,p);
+  let lpq = njs.norm2(dpq);
+
+  let theta = Math.atan2(dpq[1], dpq[0]);
+
+  let top_pnt = [];
+
+  let pnt = [];
+  let rpnt = [];
+  for (let i=0; i<nseg; i++) {
+    let t = (i/nseg);
+    let a = ((theta - (Math.PI/4))*t) + ((1-t)*(theta + (Math.PI/4)));
+
+    a = (-t*Math.PI/3) + ((1-t)*Math.PI/3);
+
+    let c = Math.cos(a);
+    let s = Math.sin(a);
+
+    let v = [ (c*dpq[0]) - (s*dpq[1]), (s*dpq[0]) + (c*dpq[1]) ]
+    pnt.push( njs.add(p, v) );
+
+    top_pnt.push( pnt[i] );
+
+    let u = [ (-c*dpq[0]) + (s*dpq[1]), (-s*dpq[0]) - (c*dpq[1]) ]
+    rpnt.push( njs.add(q, u) );
+
+
+    //two.makeCircle( pnt[i][0], pnt[i][1], 4 + (2*i/nseg)  );
+    //two.makeCircle( rpnt[i][0], rpnt[i][1], 4 + (2*i/nseg)  );
+
+  }
+
+  for (let i=0; i<rpnt.length; i++) { pnt.push( rpnt[i] ); }
+
+  let aa = makeTwoAnchor(pnt);
+  let _path = two.makePath( aa );
+
+  _path.noStroke();
+
+  if (typeof co !== "undefined") {
+    _path.fill = co;
+  }
+  /*
+  _path.fill = "rgb(100,50,50)";
+  _path.fill = "#594e90";
+  _path.fill = "#78a50a";
+  _path.fill = "#65a31c";
+  _path.fill = "#6fdc8c";
+  */
+
+
+  //DEBUG
+  //we should put this not here.
+  //we're just testing it out here because it's simpler, for now
+  // TODO
+  // this is not uniform along the top of the lune...
+  // need to check it out...
+  //
+  /*
+  for (let i=0; i<top_pnt.length; i++) {
+
+    if ((i%3) == 0) {
+    let p = top_pnt[i];
+    let pp = njs.add( top_pnt[i], [18,-40] );
+    let _l = two.makeLine( p[0], p[1], pp[0], pp[1] );
+    }
+  }
+  */
+
+
+}
+
+//--------------------
+//--------------------
+//--------------------
+//--------------------
+
+function show_frame() {
+  let two = g_fig_ctx.two;
+
+  let rect = two.makeRectangle( two.width/2, two.height/2, two.width, two.height )
+  rect.lineWidth = 2;
+}
+
+// #003f5c (blue)
+// #494e90 (dark blue/purple)
+// #bc4c96 (lighter purple)
+// #ff5f66 (red)
+// #ffa600 (orange)
+
+// #003f5c
+// #006572
+// #008b56
+// #78a50a
+// #ffa600
+
+// https://carbondesignsystem.com/data-visualization/color-palettes/
+//
+var DPAL = [
+  "#8a3ffc",
+  "#33b1ff",
+  "#007d79",
+  "#ff7eb6",
+  "#fa4d56",
+  "#fff1f1",
+  "#6fdc8c",
+  "#4589ff",
+  "#d12771",
+  "#d2a106",
+  "#08bdba",
+  "#bae6ff",
+  "#ba4e00",
+  "#d4bbff"
+];
+
+function fig_lune() {
+  let two = g_fig_ctx.two;
+
+  let style = {
+    "size": 20,
+    //"weight": "bold",
+    "weight": "normal",
+    "family": "Libertine, Linux Libertine O"
+  };
+
+  let _co_faded = "rgb(150,150,150)";
+  _co_faded = "rgb(180,180,180)";
+
+  let _co_grey = "rgb(80,80,80)";
+  let _co_solid = "rgb(20,20,20)";
+  let _co_highlight = "rgb(235,64,52)";
+  _co_highlight = "rgb(201,62,52)";
+  _co_highlight = '#FFB74D';
+  _co_highlight = '#AD1457';
+  _co_highlight = "rgb(193,39,45)";
+  _co_highlight = "#ff5f66";
+  _co_highlight = "#ffa600";
+  _co_highlight = "#fa4d56";
+
+  _co_highlight = "#33b1ff";
+  _co_highlight = "#bae6ff";
+
+  _co_highlight = DPAL[11];
+
+
+  let _r = 6;
+
+  let P = [100, 300];
+  let Q = [200,200];
+  //let W = [330,170];
+  let W = [320,210];
+  let U = [480,150];
+
+  P = [260, 260];
+  Q = [360,160];
+  W = [480,170];
+  U = [470,290];
+
+
+  let dpq = njs.sub( Q, P );
+  let lpq = njs.norm2( dpq );
+
+  let _pB = two.makeCircle( P[0], P[1], lpq );
+  _pB.noFill();
+  _pB.stroke = _co_faded;
+  _pB.linewidth = 2;
+  _pB.opacity = 0.75;
+  _pB.dashes = [5,5];
+
+
+  let theta0 = Math.atan2( dpq[1], dpq[0] );
+  let _s0 = two.makeArcSegment( P[0], P[1], lpq-1, lpq+1, theta0 + Math.PI/3, theta0 - Math.PI/3 );
+  _s0.fill = "rgb(20,20,20)";
+  _s0.linewidth = 1;
+  _s0.stroke = "rgb(20,20,20)";
+  _s0.opacity = 0.75;
+
+  let theta1 = Math.atan2( -dpq[1], -dpq[0] );
+  let _s1 = two.makeArcSegment( Q[0], Q[1], lpq-1, lpq+1, theta1 + Math.PI/3, theta1 - Math.PI/3 );
+  _s1.fill = "rgb(20,20,20)";
+  _s1.linewidth = 1;
+  _s1.stroke = "rgb(20,20,20)";
+  _s1.opacity = 0.75;
+
+
+  let mpq = [ (P[0] + Q[0])/2.0, (P[1] + Q[1])/2.0 ];
+  let Npq = njs.mul( 1.0 / njs.norm2(dpq), dpq );
+  let ortho = njs.mul( 1.25, [ -dpq[1], dpq[0] ] );
+  let Northo = njs.mul( 1.0 / njs.norm2(ortho), ortho );
+
+  // hatching...
+  //
+
+  let _l_s = njs.add( Q, njs.mul( -1000, Northo ) );
+  let _l_e = njs.add( Q, njs.mul(  1000, Northo ) );
+
+  let fpp = makeTwoAnchor( [_l_s, _l_e, [1000, -10 ]] );
+  let _fillpath = two.makePath( fpp );
+  _fillpath.fill = "#f2777d";
+
+
+  let _hl = two.makeLine( _l_s[0], _l_s[1], _l_e[0], _l_e[1] );
+  _hl.linewidth = 2.5;
+  _hl.stroke = _co_solid;
+
+
+  let _nseg = 100;
+  for (let i=0; i<=_nseg; i++) {
+    let p = njs.add( Q, njs.mul( 10*((i/_nseg)-0.5), ortho ) );
+    let pp = njs.add( p, njs.mul(HATCH_LEN, Npq) );
+
+    let _ll = two.makeLine( p[0], p[1], pp[0], pp[1] );
+    _ll.fill = "rgb(20,20,20)";
+    _ll.stroke = "rgb(20,20,20)";
+    _ll.linewidth = 2.5;
+    _ll.linewidth = HATCH_LW;
+    _ll.opacity = 1;
+    _ll.cap = "round";
+  }
+
+
+
+  //---
+
+  let _pql = two.makeLine( P[0], P[1], Q[0], Q[1] );
+  _pql.linewidth = 2;
+  _pql.storke = _co_solid;
+  _pql.dashes = [8,8];
+
+  let _p_txt = two.makeText( "p", P[0]-14, P[1]+10, style );
+  let _q_txt = two.makeText( "q", Q[0]-20, Q[1]-1, style );
+  let _w_txt = two.makeText( "w", W[0]+12, W[1]-12, style );
+  let _u_txt = two.makeText( "u", U[0]+16, U[1]+12, style );
+
+
+  // filled in graphical points for points p,q,w
+  //
+  let _p = two.makeCircle( P[0], P[1], _r );
+  _p.fill = _co_solid;
+  _p.linewidth = 1.2;
+  _p.stroke = _co_highlight;
+
+  _p.stroke = _co_solid;
+  _p.fill = _co_highlight;
+
+  let _q = two.makeCircle( Q[0], Q[1], _r );
+  _q.fill = _co_solid;
+  _q.linewidth = 1.2;
+  _q.stroke = _co_solid;
+  //_q.fill = _co_grey;
+
+  let _w = two.makeCircle( W[0], W[1], _r );
+  _w.fill = _co_solid;
+  _w.linewidth = 1.2;
+  _w.stroke = _co_solid;
+  //_w.fill = _co_grey;
+
+  let _u = two.makeCircle( U[0], U[1], _r );
+  _u.fill = _co_solid;
+  _u.linewidth = 1.2;
+  _u.stroke = _co_solid;
+  //_w.fill = _co_grey;
+
+
+}
+
+function init() {
+  let two = g_fig_ctx.two;
+
+  //let vr = [0,0,1];
+  //let theta = -Math.PI/16 + Math.PI/2;
+
+  var ele = document.getElementById("ui_canvas");
+  two.appendTo(ele);
+
+  show_frame();
+
+  fig_lune();
+
+  two.update();
+
+}

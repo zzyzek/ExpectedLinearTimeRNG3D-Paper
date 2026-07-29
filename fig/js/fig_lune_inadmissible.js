@@ -176,7 +176,7 @@ function mk_hatching_half_lune(p,q) {
 
   let ds = 3;
 
-  let nseg = 42;
+  let nseg = 15;
 
   let dpq = njs.sub(q,p);
   let lpq = njs.norm2(dpq);
@@ -191,14 +191,14 @@ function mk_hatching_half_lune(p,q) {
   let L = lpq*Math.sqrt(3)/2;
 
   let top_pnt = [];
+  let inv_lune = [];
 
   let alpha = njs.add( mpq, njs.mul( L, ortho));
   let beta  = njs.add( mpq, njs.mul(-L, ortho));
 
   let _R = lpq;
 
-  let pnt = [];
-  let rpnt = [];
+
   for (let i=0; i<=nseg; i++) {
     let t = (i/nseg);
 
@@ -216,25 +216,34 @@ function mk_hatching_half_lune(p,q) {
       h = (_dx / Math.tan(Math.asin(_dx/_R))) - (_R/2);
     }
 
-    //console.log("h:", h, _dx, _R, _dx/_R, Math.asin(_dx/_R));
-
     top_pnt.push( njs.add( _u, njs.mul( h, Npq) ) );
+    inv_lune.push( top_pnt[i] );
   }
+
+  inv_lune.push( njs.add(mpq, njs.mul( 1000, ortho )) );
+  inv_lune.push( [800, -10] );
+  inv_lune.push( njs.add(mpq, njs.mul( -1000, ortho )) );
+
+  let aa = makeTwoAnchor( inv_lune );
+  let _path = two.makePath( aa );
+  _path.fill = "#fff1f1";
+  _path.fill = "#d2a106";
+  _path.fill = "#ff7eb6";
+
 
 
   for (let i=0; i<top_pnt.length; i++) {
-    if ((i%3) == 0) {
-      let p = top_pnt[i];
-      //let pp = njs.add( top_pnt[i], [18,-40] );
-      let pp = njs.add( top_pnt[i], njs.mul(HATCH_LEN, Npq) );
-      let _l = two.makeLine( p[0], p[1], pp[0], pp[1] );
-      _l.linewidth = 2.5;
-      _l.linewidth = HATCH_LW;
-      _l.fill = "rgb(20,20,20)";
-      _l.stroke = "rgb(20,20,20)";
-      _l.cap = "round";
-    }
+    let p = top_pnt[i];
+    //let pp = njs.add( top_pnt[i], [18,-40] );
+    let pp = njs.add( top_pnt[i], njs.mul(HATCH_LEN, Npq) );
+    let _l = two.makeLine( p[0], p[1], pp[0], pp[1] );
+    _l.linewidth = 2.5;
+    _l.linewidth = HATCH_LW;
+    _l.fill = "rgb(20,20,20)";
+    _l.stroke = "rgb(20,20,20)";
+    _l.cap = "round";
   }
+
 
 
 }
@@ -279,7 +288,6 @@ function mklune(p,q, co) {
   for (let i=0; i<rpnt.length; i++) { pnt.push( rpnt[i] ); }
 
   let aa = makeTwoAnchor(pnt);
-
   let _path = two.makePath( aa );
 
   _path.noStroke();
@@ -396,10 +404,12 @@ function fig_lune() {
   let Q = [200,200];
   //let W = [330,170];
   let W = [320,210];
+  let U = [480,150];
 
   P = [260, 260];
   Q = [360,160];
   W = [480,170];
+  U = [470,290];
 
 
   /*
@@ -444,12 +454,15 @@ function fig_lune() {
 
   //mklune(P,Q, DPAL[6]);
 
+  // highlighted portion is in here too
+  //
   mk_hatching_half_lune(P,Q);
 
 
   let _p_txt = two.makeText( "p", P[0]-14, P[1]+10, style );
   let _q_txt = two.makeText( "q", Q[0]-20, Q[1]-1, style );
-  let _w_txt = two.makeText( "w", W[0]+10, W[1]-10, style );
+  let _w_txt = two.makeText( "w", W[0]+12, W[1]-12, style );
+  let _u_txt = two.makeText( "u", U[0]+16, U[1]+12, style );
 
   /*
   let _lpq = two.makeLine( P[0], P[1], Q[0], Q[1] );
@@ -536,6 +549,12 @@ function fig_lune() {
 
   //---
 
+  let _pql = two.makeLine( P[0], P[1], Q[0], Q[1] );
+  _pql.linewidth = 2;
+  _pql.storke = _co_solid;
+  _pql.dashes = [8,8];
+
+
   // filled in graphical points for points p,q,w
   //
   let _p = two.makeCircle( P[0], P[1], _r );
@@ -556,6 +575,12 @@ function fig_lune() {
   _w.fill = _co_solid;
   _w.linewidth = 1.2;
   _w.stroke = _co_solid;
+  //_w.fill = _co_grey;
+
+  let _u = two.makeCircle( U[0], U[1], _r );
+  _u.fill = _co_solid;
+  _u.linewidth = 1.2;
+  _u.stroke = _co_solid;
   //_w.fill = _co_grey;
 
 

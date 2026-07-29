@@ -333,12 +333,15 @@ then $q$ will always be in the lune created by $p$ and $w$ (see Figure \ref{TK})
   TK
 \end{pf}
 
-The plane partition heuristic allows us to construct a convex hull from neighboring
-points that will bound the area that needs to be tested for relative neighborhood graph
-neighbors of $p$.
+The plane partition heuristic takes points near $p$ to be used in constructing a
+convex hull around $p$.
+Only nearby points that fall within the convex hull need to be tested for relative
+neighborhood graph connections to $p$.
 
-Only points within the convex hull have the potential to connect to $p$:
-%need to be considered for a relative neighborhood graph connection to $p$:
+Lemma \ref{lemma:hull} states whis more formally:
+
+%Only points within the convex hull have the potential to connect to $p$:
+%%need to be considered for a relative neighborhood graph connection to $p$:
 
 \begin{lemma}[Convex Hull Heuristic]
   \label{lemma:hull}

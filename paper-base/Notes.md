@@ -43,9 +43,9 @@ All lemmas,  theorems and pseudo-code is fine but I think they should be there
 for completeness.
 The figures are the ones that will describe how the algorithm works.
 
-* example lune with edge, and excluded edge (2d)
+* example lune with edge, and excluded edge (2d) (`fig_lune`)
 * hero shot of 2d and 3d relative neighborhood graph
-* inadmissible region between points p,q, along with cut plane heuristic (2d)
+* inadmissible region between points p,q, along with cut plane heuristic (2d) (`fig_lune_inadmissible`, `fig_lune_heuristic`)
   - also show an extra point, w, that will always be excluded because of q in lune(p,w)
   - label regions that mirror lemma 1
 * algorithm RNGp comic/graphic, detailing operation

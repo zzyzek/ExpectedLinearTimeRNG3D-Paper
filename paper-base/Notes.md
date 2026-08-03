@@ -33,6 +33,24 @@ constant runtime inflation)
 > ... the reader is encouraged to use the convex hull idea to create an alternative
 > expected linear time algorithm ...
 
+
+---
+
+One issue we missed, in the algorithm implementation as well,
+is a check to make sure the $N _ {p,q}$ plane, if it secures the patch,
+will keep on securing the patch as the fence is increased.
+
+I believe this is a check to make sure the face normal with the $N _ {p,q}$
+normal is positive, but I need to think about this more.
+
+Regardless, we have to:
+
+* add it to the paper as an extra check
+* add it to the reference implementation
+  - implement it
+  - try to add a test case that triggers this condition to make sure we've actually solved it
+  - go through randomized tests to make sure there's no regression
+
 ---
 
 Figures

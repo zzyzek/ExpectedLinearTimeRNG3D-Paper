@@ -176,12 +176,12 @@ OUTLINE
 \section{Motivation and Structure}
 
 This section provides proofs that justify the algorithm's correctness and runtime.
-Before going through specifics, an overview is warranted providing motivation
-for the various structural lemmas and theorems.
-Note that it is assumed that the problem setup is points distributed uniformly
-in a three dimensional cube.
+Before going through specifics, an overview is provided, giving motivation
+for the various proofs and algorithmic details.
 
-$N$ points are initially binned into grid cells of size $N^{-1/3}$.
+The problem setup provides $N$ 3D points chosen uniformly at random in the unit cube.
+As an initial pass,
+the $N$ points are then binned into grid cells of size $N^{-1/3}$.
 
 A single point is considered at a time
 and the relative neighborhood graph connections are calcualted relative to this
@@ -197,31 +197,39 @@ the algorithm makes use of a \emph{cut plane heuristic}.
 For each anchor point, $p$, a nearby point, $q$, is used to create a half plane cut.
 The half plane cut is defined from the plane that passes through $q$ with normal in
 the direction of $(q-p)$, $H ^+ _ {p,q}$.
-
 All points that fall outside of $H ^+ _ {p,q}$ can never have an edge to $p$ as the point $q$
 would be in the lune excluding the connection.
 
-If a compact convex hull can be created from the $H^+ _ {p,q}$ half plane cuts
+Figure \ref{TK} provides a 2D representation of the cut plane heuristic, showing
+the anchor point $p$, a nearby  point $q$, a point that is excluded by the heuristic, $u$,
+and a point, $w$, that still has a potential relative neighborhood graph connection to $p$.
+
+If a compact convex hull can be created from the $H^+ _ {p,q}$ half plane cuts,
 then only points within the convex hull need be considered for relative neighborhood graph
 connections to $p$.
 
-The presented algorithm implicitly constructs a convex hull by considering a bounding
-region, called a \emph{fence}, whose geometry is simpler and for which constructing a bounding
-convex hull is simpler.
+Instead of working with the convex hull directly, a bounding region is used,
+%The presented algorithm implicitly constructs a convex hull by considering a bounding region,
+called a \emph{fence}, for which constructing a bounding convex hull is simpler.
 The fence is a cube, centered at the grid cell center that the anchor point $p$ occupies.
 The fence initially has side length of the cube cell spacing.
 Each fence face is broken into square regions, called \emph{fence patches}, and each patch
 is tested against the half plane cut.
+In this paper, only nine fence posts per face are considered, with fence post patches
+clustered into $2 \times 2$ posts, four clusters per fence face.
 
 If the fence patch is completely outside of the half plane cut, the fence patch is said
 to be \emph{secured}.
+Figure \ref{TK} shows various patches that are in different states of securitization
+from half plane cuts.
 
 Points within the fence are considered when constructing the half plane cuts.
 If the points within the current fence fail to secure the fence, the fence is increased,
-in grid cell side length increments, and new nearby points are then considered
+staying on grid cell boundaries
+and new nearby points are then considered
 to try and secure the fence.
-The fence is increased until it is secured, with a guaranteed termination condition if
-the fence extends beyond the unit cube region.
+The fence is increased until it is secured, in the worst case increasing to the
+degenerate condition that subsumes the whole unit cube.
 
 Once all fence patches are secured, there is an implicit compact convex hull that is completely
 within the fence cube and only points that fall within the fence need be considered
@@ -235,33 +243,71 @@ the fence need only be extended by a constant proportion to the fence side lengt
 so only adds an expected constant factor of points to consider, leaving the linear runtime
 unaffected.
 
+Once a fence has been secured and all relevant nearby points collected, a naive
+relative neighborhood graph algorithm is then used to find connections from the anchor
+point to its nerby  point collection.
+The size of collected nearby points is expected linear, so the naive algorithm runs
+in constant time, providing the expected linear time overall as each anchor point is
+considered in turn.
+
 Figure \ref{TK} shows a graphical cartoon of this process as a summary.
 
 The fence patch is reprsented by four points on its corners, called \emph{ fence posts}.
 That is, a fence post is secured if the patch, or \emph{cluster} of fence posts, falls
 completely on the restricted side of a half plane cut.
 
-The algorithm is thusly named Securing Posts on Increasing Fence (SPoIF).
+As the algorithm operates by securing posts on an ever increasing fence until all
+posts secured, the algorithm is named as Securing Posts on Increasing Fence (SPoIF).
 
-The SPoIF algorithm is chosen for its conceptual simplicity.
-There is tedious bookkeeping and details to be accounted for but provides a compromise
-of constant runtime efficiency and conceptual simplicity while maintaining the $O(N)$
-expected runtime.
-
-
-
+Proofs of correctness and algorithmic details are presented in section TK, TK.
 Before proceeding with the technical aspects of the algorithm, a few points are discussed.
 
-Note that a secured fence implies a compact convex hull and thus implies a smaller compact convex
-hull bounded within it, the converse is not true and a convex hull constructed from
-an anchor point and its neighbors need not be secured by a fence in this way.
-This means 
+%The SPoIF algorithm is chosen for its conceptual simplicity 
+%SPoIF has suffers from some tedious bookkeeping and details that need to be accounted for
+%but provides a compromise
+%of constant runtime efficiency and conceptual simplicity while maintaining the $O(N)$
+%expected runtime.
 
+
+% THIS GOES SOMEWHERE ELSE...CONCLUSION?
+
+Secured fence implies a compact convex hull and thus implies a smaller compact convex
+hull bounded within it.
+The converse is not true and a convex hull constructed from
+an anchor point and its neighbors need not be secured by a fence in this way.
+The convex hull could be considered directly, instead of the fence structure as proxy,
+but this involves using convex hull planes defined by a point and normal with the need
+to derive the vertex intersection points.
+Since there are an expected constant half planes to consider, vertex enumeration conversion
+would be constant but, at least naively, at the cost of an inflated runtime factor.
+Using the convex hull directly is not considered further in this paper.
+
+Below, nine fence posts per cube face (thirty six in total), will be used.
+Some other number of fence posts could be used.
+Another alternative is to use a shrinking area on each of the faces,
+defined by the half plane intersections.
+
+These are mentioned to note that many other methods could work and still retain
+the expected linear time runtime.
+Other than to mention them as possibilities, these ideas are not pursued further in this paper.
+
+The nine fence posts per fence face implementation is now considered in detail.
 
 \subsection{Overview}
 
+In this section, we provide some technical proofs providing correctness for
+the algorithm in section TK.
+The general strategy will be to show that only nearby points within a compact
+convex hull of an anchor point need be considered for relative neighborhood graph
+connections, that nearby points within a convex factor distance of the convex hull
+need to be considered for any influence and that the approximation by the coarse
+fence and fence posts imply a contained compact convex hull.
+
 Let $P = (p _ 0, p _ 1, \dots, p _ {n-1})$, where each $p _ i \in \mathbb{R}^3$ is
 chosen uniformly at random in the unit cube.
+
+% PROBABLY SHOULD BE TAKEN OUT
+%...
 
 A rough overview of the algorithm proceeds as follows:
 
@@ -420,7 +466,7 @@ convex hull around $p$.
 Only nearby points that fall within the convex hull need to be tested for relative
 neighborhood graph connections to $p$.
 
-Lemma \ref{lemma:hull} states whis more formally:
+Lemma \ref{lemma:hull} states this more formally:
 
 %Only points within the convex hull have the potential to connect to $p$:
 %%need to be considered for a relative neighborhood graph connection to $p$:
@@ -460,6 +506,14 @@ that distance:
   and so can't influence any connection within $\mathbf{C}$.
 \end{pf}
 
+%%%%
+%%%%
+%%%%
+
+% TAKE THIS OUT
+% THIS DISCUSSION SHOULD GO IN CONCLUSION, NOT HERE
+% WE KEEP MENTIONING IT, IT'S FINE, WE KNOW, JUST MENTION IT IN THE CONCLUSION
+
 The above already suggests a linear time algorithm by starting at a grid cell where $p$ resides
 and adding neighboring points from neighboring grid cells until a compact convex hull has been achieved
 that meets some maximum radius criteria.
@@ -475,7 +529,11 @@ naive vertex enumeration algorithm to be used.
 There may be ways of speeding up the vertex enumeration by considering the structure of the problem in question
 but this methodology is not pursued further in this paper.
 
-Instead, a bounding box cube is used as a proxy for the convex hull.
+%%%%
+%%%%
+%%%%
+
+A bounding box cube is used as a proxy for the convex hull.
 The bounding box cube, called a \emph{fence}, has certain key point points on each face that will be used
 to indicate when a cutting plane has partitioned portions of the fence from the anchor point, $p$.
 Once all portions have been partitioned, a process that will be called \emph{securing the fence},
@@ -488,10 +546,27 @@ We will see that a constant factor of fence radius need be considered to add add
 relative neighborhood graph computation.
 
 A secured fence necessarily implies a compact convex hull embedded within the fence but the other direction
-is not true in general, as there can be a convex hull whose volume is completely contained within the fence but whose
-partition planes do not secure the fence.
+is not true in general, as there can be a convex hull whose volume is completely contained within the
+fence but whose partition planes do not secure the fence.
 We will see that this has no effect on the expected linear runtime, as securing the fence for an individual
 anchor point is expected to use a constant number of neighbors.
+
+\begin{lemma}[Cube Bounds on Interior Convex Hull]
+  \label{lemma:cubeConvexHull}
+  Let ${\bf C}$ an axis aligned cube with each face broken into $m$ non overlapping axis aligned
+  square patches, where the four corners of patchs are
+  $\sigma _ {d,j,k}$, $d \in \{ \pm x, \pm y, \pm z \}$, $j \in \{0 \dots (m-1)\}$, $k \in \{0,1,2,3\}$,
+  and with $N _ {\sigm _ {d,j}}$ the normal of the patch away from the center.
+  Let ${\bf H} = (H _ 0, H _ 1, \dots, H _ {s-1})$ be a list of half plane cuts.
+  If, for every patch $\sigma _ {d,j}$ there exists a half plane $H _ i$, with normal $N _ {H _ i}$,
+  such that $N _ {\sigma _ {d,j}} \cdot N _ {H _ i} < 0$ and each patch corner point is on the other
+  side of the half plane cut, $N _ {H _ i} \cdot N _ {\sigma _ {d,j,k}} < 0$,
+  then ${\bf C}$ bounds a compact convex hull made from the intersection of ${\bf H}$.
+\end{lemma}
+
+\begin{pf}
+  ...
+\end{pf}
 
 
 

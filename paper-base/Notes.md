@@ -5,6 +5,14 @@ To get something started, I'm using the template provided by [information proces
 
 ---
 
+###### 2026-08-03
+
+I think the algorithm pseudo code should go before the proofs.
+The proofs are pretty technical and we should provide them there
+for completeness.
+I think providing the algorithm first, especially after the motivation
+section, will be more enlightening.
+
 Math Preliminaries
 ---
 

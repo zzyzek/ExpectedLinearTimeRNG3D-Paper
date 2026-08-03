@@ -175,6 +175,88 @@ OUTLINE
 
 \section{Motivation and Structure}
 
+This section provides proofs that justify the algorithm's correctness and runtime.
+Before going through specifics, an overview is warranted providing motivation
+for the various structural lemmas and theorems.
+Note that it is assumed that the problem setup is points distributed uniformly
+in a three dimensional cube.
+
+$N$ points are initially binned into grid cells of size $N^{-1/3}$.
+
+A single point is considered at a time
+and the relative neighborhood graph connections are calcualted relative to this
+point.
+Each point considered in this way is called an \emph{anchor point}.
+The runtime construction for the relative neighborhood graph relative to each
+anchor point will be constant, providing an expected $O(N)$ algorithm once
+each anchor point is processed.
+
+To construct the relative neighborhood graph relative to the anchor point,
+the algorithm makes use of a \emph{cut plane heuristic}.
+
+For each anchor point, $p$, a nearby point, $q$, is used to create a half plane cut.
+The half plane cut is defined from the plane that passes through $q$ with normal in
+the direction of $(q-p)$, $H ^+ _ {p,q}$.
+
+All points that fall outside of $H ^+ _ {p,q}$ can never have an edge to $p$ as the point $q$
+would be in the lune excluding the connection.
+
+If a compact convex hull can be created from the $H^+ _ {p,q}$ half plane cuts
+then only points within the convex hull need be considered for relative neighborhood graph
+connections to $p$.
+
+The presented algorithm implicitly constructs a convex hull by considering a bounding
+region, called a \emph{fence}, whose geometry is simpler and for which constructing a bounding
+convex hull is simpler.
+The fence is a cube, centered at the grid cell center that the anchor point $p$ occupies.
+The fence initially has side length of the cube cell spacing.
+Each fence face is broken into square regions, called \emph{fence patches}, and each patch
+is tested against the half plane cut.
+
+If the fence patch is completely outside of the half plane cut, the fence patch is said
+to be \emph{secured}.
+
+Points within the fence are considered when constructing the half plane cuts.
+If the points within the current fence fail to secure the fence, the fence is increased,
+in grid cell side length increments, and new nearby points are then considered
+to try and secure the fence.
+The fence is increased until it is secured, with a guaranteed termination condition if
+the fence extends beyond the unit cube region.
+
+Once all fence patches are secured, there is an implicit compact convex hull that is completely
+within the fence cube and only points that fall within the fence need be considered
+for relative neighborhood graph connections to the anchor point $p$.
+Though only points inside of the fence cube have the possibility of a relative neighborhood
+graph connection, points outside of the fence can still affect connections within the fence
+by potentially restricting connection.
+
+The fence needs to be extended to add these additional points but, as will be shown below,
+the fence need only be extended by a constant proportion to the fence side length and
+so only adds an expected constant factor of points to consider, leaving the linear runtime
+unaffected.
+
+Figure \ref{TK} shows a graphical cartoon of this process as a summary.
+
+The fence patch is reprsented by four points on its corners, called \emph{ fence posts}.
+That is, a fence post is secured if the patch, or \emph{cluster} of fence posts, falls
+completely on the restricted side of a half plane cut.
+
+The algorithm is thusly named Securing Posts on Increasing Fence (SPoIF).
+
+The SPoIF algorithm is chosen for its conceptual simplicity.
+There is tedious bookkeeping and details to be accounted for but provides a compromise
+of constant runtime efficiency and conceptual simplicity while maintaining the $O(N)$
+expected runtime.
+
+
+
+Before proceeding with the technical aspects of the algorithm, a few points are discussed.
+
+Note that a secured fence implies a compact convex hull and thus implies a smaller compact convex
+hull bounded within it, the converse is not true and a convex hull constructed from
+an anchor point and its neighbors need not be secured by a fence in this way.
+This means 
+
 
 \subsection{Overview}
 

@@ -48,6 +48,9 @@ Regardless, we have to:
 * add it to the paper as an extra check
 * add it to the reference implementation
   - implement it
+    + it looks like this might already be implemented. Meant as an optimization, this is
+      now a necesary check. The line is when calculating the opposite `idir` from the
+      `Nqp` vector and skipping the opposite `idir`.
   - try to add a test case that triggers this condition to make sure we've actually solved it
   - go through randomized tests to make sure there's no regression
 

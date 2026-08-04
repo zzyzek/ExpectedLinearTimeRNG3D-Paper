@@ -108,7 +108,7 @@
 
 \section{Introduction}
 
-Let $P = (p _ 0, p _ 1, \dots, p _ {n-1})$ be a set of points in $\mathbb{R^3}$.
+Let $P = (p _ 0, p _ 1, \dots, p _ {n-1})$ be a set of points in $\mathbb{R}^3$.
 The relative neighborhood graph, $\text{RNG}(P)$, is an undirected, simple graph that connects two vertices,
 $p _ i, p _ j$ if and only if there is no other vertex within the \emph{lune} between
 them.
@@ -574,7 +574,12 @@ anchor point is expected to use a constant number of neighbors.
 
 % probably a theorem...
 
-\begin{theorem}[Cube Bounds on Interior Convex Hull]
+% this needs to be split
+% the patch secured in perpetuity condition is for the algorithm to not redo work after a patch has been secured
+% the 
+
+%\begin{theorem}[Cube Bounds on Interior Convex Hull]
+\begin{theorem}
   \label{thm:cubeConvexHull}
   \ \\
   Let $\mathbf{B}$ an axis aligned cube centered at the origin, with side length $L _ {\mathbf{B}}$.
@@ -587,7 +592,7 @@ anchor point is expected to use a constant number of neighbors.
   If, for every patch $\rho _ {d,j}$ there exists a half plane $H _ i$, with normal $N _ {H _ i}$,
   such that every corner of the patch, $k \in \{0,1,2,3\}$, $\rho _ {d,j,k} \cdot N _ {H _ i} < 0$ and
   $(\rho _ {d,j,k} - q _ i) \cdot N _ {H _ i} < 0$,
-  then for all axis aligned cubes, $\mathbf{B'}$ centered at zero of side length $L _ {\mathbf{B'}} \ge L _ {\mathbf{B}}$
+  then for all axis aligned cubes, $\mathbf{B'}$ centered at zero of side length $L \ge L _ {\mathbf{B}}$
   %, for a given patch, all patch corner point are on the other
   %side of the half plane cut, $N _ {H _ i} \cdot (\rho _ {d,j,k} - q _ i) < 0$,
   %then
@@ -595,13 +600,52 @@ anchor point is expected to use a constant number of neighbors.
 \end{theorem}
 
 \begin{pf}
-  The four points of $\rho _ {d,j}$, $(c\rho _ {d,j,0},\rho _ {d,j,1},\rho _ {d,j,2},\rho _ {d,j,3})$  reate a frustum,
-  with any point lying on the patch of $\rho _ {d,j}$ defined by $\sum _ k t _ k \rho _ {d,j,k}$ with $\sum _ k t _ k = 1$, $t _ k \ge 0$.
+  The four points of $\rho _ {d,j}$, $(c\rho _ {d,j,0},\rho _ {d,j,1},\rho _ {d,j,2},\rho _ {d,j,3})$  create a frustum.
+  A point lying on the patch is defined by $u = \sum _ k L t _ k \rho _ {d,j,k}$ with $L \ge 1, \sum _ k t _k = 1, t _k \ge 0$. \\
+  Consider:\\
+  $$
+  \begin{array}{ll}
+   & ( u - q _ i ) \cdot N _ {H _ i}  \\
+    = & ( (\sum _ k L t _ k \rho _ {d,j,k} ) - q _ i ) \cdot N _ {H _ i} \\
+    = & ( (\sum _ k L t _ k \rho _ {d,j,k} ) - (\sum _ k t _ k ) q _ i ) \cdot N _ {H _ i} \\
+    = & t _ k (\sum _ k (L-1) \rho _ {d,j,k} \cdot N _ { H _ i} ) + t _ k ( \rho _ {d,j,k} - q _ i ) \cdot N _ {H _ i}
+  \end{array}
+  $$
+  Since $t _ k \ge 0$ and $L \ge 1$, each term is non-positive, each point on the scaled patch, thus the whole patch, is
+  partitioned by the plane defined by $H _ i$. \\
+  By assumption, all patches have been secured for a $L = L _ {\mathbf{B}}$.
+  If there is a $w$ that is outside of the cube fence, then it must be on a patch for some fence size $L _ w$, but
+  since $L _ w > L$, this is contradiction, disallowing the existence of $w$.
+\end{pf}
 
+Once a patch $\rho _ {d,j}$ is secured by a $H _ i$, it's secured in perpetuity for any larger bounding cube $\mathbf{B}$.
+Securing a patch is a stronger condition than having each of the patch points be partitioned for a given side length.
+A secure patch is partitioned no matter how big the fence cube gets, ensuring that as a cube fence grows, if a patch is
+secured at some point in the past, it will remain secure in the future.
+
+Theorem \ref{thm:cubeConvexHull} allows us to secure patches with candidate nearby points to an anchor point and not
+reprocess the candidate points as they secure fence patches.
+There may be optimizations that re-use candidate nearby points but these are not pursued further in this paper.
+
+
+%\begin{theorem}[RNGPointSPoIF($P$, $p$) runs in expected $O(1)$ time]
+\begin{theorem}
+  \label{thm:pspoifO1}
+  The function RNGPointSPoIF($P$, $p$) runs in expected $O(1)$ time
+\end{theorem}
+
+\begin{pf}
   ...
 \end{pf}
 
+  Finding the relative neighborhood graph connections for $p$ is $O(1)$,
+  providing us with the desired expected linear time algorithm:
 
+%\begin{theorem}[RNGSPoIF($P$) runs in expected $O(N)$ time]
+\begin{theorem}
+  \label{thm:ppoifON}
+  The function RNGSPoIF($P$) runs in expected $O(N)$ time
+\end{theorem}
 
 TODO:
 

@@ -177,9 +177,9 @@ OUTLINE
 
 This section provides proofs that justify the algorithm's correctness and runtime.
 Before going through specifics, an overview is provided, giving motivation
-for the various proofs and algorithmic details.
+for the technical details that follow.
 
-The problem setup provides $N$ 3D points chosen uniformly at random in the unit cube.
+From the problem formulation, there are $N$ 3D points chosen uniformly at random in the unit cube.
 As an initial pass,
 the $N$ points are then binned into grid cells of size $N^{-1/3}$.
 
@@ -192,19 +192,31 @@ anchor point will be constant, providing an expected $O(N)$ algorithm once
 each anchor point is processed.
 
 To construct the relative neighborhood graph relative to the anchor point,
-the algorithm makes use of a \emph{cut plane heuristic}.
+the algorithm makes use of a \emph{plane partition heuristic}.
 
 For each anchor point, $p$, a nearby point, $q$, is used to create a half plane cut.
 The half plane cut is defined from the plane that passes through $q$ with normal in
-the direction of $(q-p)$, $H ^+ _ {p,q}$.
-All points that fall outside of $H ^+ _ {p,q}$ can never have an edge to $p$ as the point $q$
+the direction of $(p-q)$, $H _ {q,p} = \{ u : (p - q) \cdot (u - q) > 0 \}$.
+All points that fall outside of $H _ {q,p}$ can never have an edge to $p$ as the point $q$
 would be in the lune excluding the connection.
 
-Figure \ref{TK} provides a 2D representation of the cut plane heuristic, showing
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.9\linewidth]{rng_cutplane_heuristic.pdf}
+  \label{fig:planePartitionHeuristic}
+  \caption{ 2D representation of the plane partition heuristic. $p$ is the anchor point with $q$ a nearby
+  point used to create the plane partition. The point $w$ is excluded by the plane partition heuristic as $q$ would
+  be in the lune of $p$ and $w$. The point $u$ is not excluded by the plane partition heuristic, even if
+  $q$ might fall within the lune created by $p$ and $u$ because $u$ falls below the plane partition. }
+\end{figure}
+
+
+Figure \ref{fig:planePartitionHeuristic} provides a 2D representation of the plane partition heuristic, showing
 the anchor point $p$, a nearby  point $q$, a point that is excluded by the heuristic, $u$,
 and a point, $w$, that still has a potential relative neighborhood graph connection to $p$.
 
-If a compact convex hull can be created from the $H^+ _ {p,q}$ half plane cuts,
+If, for set of $q$ points, a compact convex hull can be created from the $H _ {q,p}$ half plane cuts,
 then only points within the convex hull need be considered for relative neighborhood graph
 connections to $p$.
 
@@ -223,11 +235,10 @@ to be \emph{secured}.
 Figure \ref{TK} shows various patches that are in different states of securitization
 from half plane cuts.
 
-Points within the fence are considered when constructing the half plane cuts.
-If the points within the current fence fail to secure the fence, the fence is increased,
-staying on grid cell boundaries
-and new nearby points are then considered
-to try and secure the fence.
+Points within the fence are used to construct the half plane cuts.
+If the half plane cuts fail to secure the fence, the fence cube side is increased,
+staying on grid cell boundaries.
+The process is then repeated, attempting to secure the fence from the newly added points.
 The fence is increased until it is secured, in the worst case increasing to the
 degenerate condition that subsumes the whole unit cube.
 
@@ -235,32 +246,29 @@ Once all fence patches are secured, there is an implicit compact convex hull tha
 within the fence cube and only points that fall within the fence need be considered
 for relative neighborhood graph connections to the anchor point $p$.
 Though only points inside of the fence cube have the possibility of a relative neighborhood
-graph connection, points outside of the fence can still affect connections within the fence
-by potentially restricting connection.
+graph connection to $p$, points outside of the fence can still have an effect
+by potentially restricting other connections to $p$.
 
-The fence needs to be extended to add these additional points but, as will be shown below,
-the fence need only be extended by a constant proportion to the fence side length and
-so only adds an expected constant factor of points to consider, leaving the linear runtime
+The fence needs to be extended to add these additional points. As will be shown below,
+the fence need only be extended by a constant proportion to the fence side length.
+This adds an expected constant factor of points to consider, leaving the linear runtime
 unaffected.
 
 Once a fence has been secured and all relevant nearby points collected, a naive
 relative neighborhood graph algorithm is then used to find connections from the anchor
 point to its nerby  point collection.
 The size of collected nearby points is expected linear, so the naive algorithm runs
-in constant time, providing the expected linear time overall as each anchor point is
-considered in turn.
+in constant time.
+%providing the expected linear time overall as each anchor point is considered in turn.
 
 Figure \ref{TK} shows a graphical cartoon of this process as a summary.
 
 The fence patch is reprsented by four points on its corners, called \emph{ fence posts}.
-That is, a fence post is secured if the patch, or \emph{cluster} of fence posts, falls
+A fence post is secured if the patch, or \emph{cluster} of fence posts, falls
 completely on the restricted side of a half plane cut.
 
 As the algorithm operates by securing posts on an ever increasing fence until all
-posts secured, the algorithm is named as Securing Posts on Increasing Fence (SPoIF).
-
-Proofs of correctness and algorithmic details are presented in section TK, TK.
-Before proceeding with the technical aspects of the algorithm, a few points are discussed.
+posts secured, the algorithm is named Securing Posts on Increasing Fence (SPoIF).
 
 %The SPoIF algorithm is chosen for its conceptual simplicity 
 %SPoIF has suffers from some tedious bookkeeping and details that need to be accounted for
@@ -271,15 +279,18 @@ Before proceeding with the technical aspects of the algorithm, a few points are 
 
 % THIS GOES SOMEWHERE ELSE...CONCLUSION?
 
-Secured fence implies a compact convex hull and thus implies a smaller compact convex
+Proofs of correctness and algorithmic details are presented in section TK, TK.
+Before proceeding with the technical aspects of the algorithm, a few points are discussed.
+
+A secured fence provides a compact convex hull, the fence cube, and thus implies a smaller compact convex
 hull bounded within it.
 The converse is not true and a convex hull constructed from
 an anchor point and its neighbors need not be secured by a fence in this way.
 The convex hull could be considered directly, instead of the fence structure as proxy,
 but this involves using convex hull planes defined by a point and normal with the need
 to derive the vertex intersection points.
-Since there are an expected constant half planes to consider, vertex enumeration conversion
-would be constant but, at least naively, at the cost of an inflated runtime factor.
+Since there are an expected constant number of half planes to consider, vertex enumeration conversion
+would be constant but at the cost of an inflated runtime factor with a naive algorithm.
 Using the convex hull directly is not considered further in this paper.
 
 Below, nine fence posts per cube face (thirty six in total), will be used.
@@ -379,48 +390,52 @@ Before discussing the algorithm in detail, preliminary structural results will b
 
 \subsection{Foundation}
 
-Supporting mathematical foundation is provided in this section to motivate the
-algorithmic design.
-Our goal is to provide the mathematical infrastructure that considers connections
-to an \emph{anchor point} in a spatially local neighborhood around it.
+In this section we go through the proofs that provide the foundation of correctness
+for the algorithm.
 
-An overview of what's being achieved is:
 
-\begin{itemize}
-  \item Show the plane partition heuristic can be used to implicitely discard points
-  \item Show that the plane partition heuristic can be used to create convex hull region
-        of points that can connect
-  \item The convex hull need only be extended at most a constant proportion of the maximum
-        diameter to include the region that any point may reside in that can affect connections
-        to the anchor point
-  \item A bounding cube can be used as a proxy for convex hull, with the bounding cube
-        being partitioned implying a compact convex hull within it
-  \item The bounding cube, with high probability, need only be grown by
-        a constant factor, relative to grid cell size, ensuring constant runtime
-\end{itemize}
-
-Constant runtime for a finding relative neighborhood graph connections of a single
-point imply a linear runtime overal.
-
-From the anchor point to points nearby, a plane partition heuristic
-is used to partition space and to implicitely discard points from consideration.
-From the plane partition heuristic, a convex hull can be constructed
-whereby only points within need be considered for potential connections.
-Points outside the convex hull can't connect to the anchor point but
-still need to be considered as they still may be able to preclude connections.
-
-The convex hull will not be used directly.
-For conceptual simplicity and constant speed concerns,
-a bounding cube region, called a \emph{fence}, will be used.
-
-The bounding cube has points placed on each of its faces, called \emph{posts},
-grouped into clusters that will be used to indicate when the whole of the
-bounding cube is partitioned.
-The cube of grid cells is used to consider neighbor points and test
-plane partitions and is grown until the 
-
-A direct convex hull can be used but, for reasons discussed elsewhere, is
-not pursued further in this paper.
+%Supporting mathematical foundation is provided in this section to motivate the
+%algorithmic design.
+%Our goal is to provide the mathematical infrastructure that considers connections
+%to an \emph{anchor point} in a spatially local neighborhood around it.
+%
+%An overview of what's being achieved is:
+%
+%\begin{itemize}
+%  \item Show the plane partition heuristic can be used to implicitely discard points
+%  \item Show that the plane partition heuristic can be used to create convex hull region
+%        of points that can connect
+%  \item The convex hull need only be extended at most a constant proportion of the maximum
+%        diameter to include the region that any point may reside in that can affect connections
+%        to the anchor point
+%  \item A bounding cube can be used as a proxy for convex hull, with the bounding cube
+%        being partitioned implying a compact convex hull within it
+%  \item The bounding cube, with high probability, need only be grown by
+%        a constant factor, relative to grid cell size, ensuring constant runtime
+%\end{itemize}
+%
+%Constant runtime for a finding relative neighborhood graph connections of a single
+%point imply a linear runtime overal.
+%
+%From the anchor point to points nearby, a plane partition heuristic
+%is used to partition space and to implicitely discard points from consideration.
+%From the plane partition heuristic, a convex hull can be constructed
+%whereby only points within need be considered for potential connections.
+%Points outside the convex hull can't connect to the anchor point but
+%still need to be considered as they still may be able to preclude connections.
+%
+%The convex hull will not be used directly.
+%For conceptual simplicity and constant speed concerns,
+%a bounding cube region, called a \emph{fence}, will be used.
+%
+%The bounding cube has points placed on each of its faces, called \emph{posts},
+%grouped into clusters that will be used to indicate when the whole of the
+%bounding cube is partitioned.
+%The cube of grid cells is used to consider neighbor points and test
+%plane partitions and is grown until the 
+%
+%A direct convex hull can be used but, for reasons discussed elsewhere, is
+%not pursued further in this paper.
 
 %\renewcommand\qedsymbol{$\blacksquare$}
 
@@ -435,8 +450,9 @@ not pursued further in this paper.
 
 %\newtheorem{lemma}[theorem]{Lemma}
 
-If $w$ is on the other side of the plane that passes through $q$ and with tangent in the direction of $(q-p)$,
-then $q$ will always be in the lune created by $p$ and $w$ (see Figure \ref{TK}):
+For an anchor point $p$, if $w$ is on the other side of the plane that passes through $q$,
+with tangent in the direction of $(q-p)$,
+then $q$ will always be in the lune created by $p$ and $w$ (see Figure \ref{fig:planePartitionHeuristic}):
 
 
 \begin{lemma}[Plane Partition Heuristic]
@@ -445,7 +461,7 @@ then $q$ will always be in the lune created by $p$ and $w$ (see Figure \ref{TK})
   %w \in H = \{ u \in \mathbb{R}^3 | (q-p) \cdot (u - q) \ge 0 \}
   $$
   \begin{array}{l}
-  w \in H ^ {+} _ {p,q} = \{ u \ :  \ (q-p) \cdot (u - q) \ge 0 \}
+  w \in H  _ {q,p} = \{ u \ :  \ (p-q) \cdot (u - q) > 0 \}
   \end{array}
   $$
   then
@@ -474,12 +490,12 @@ Lemma \ref{lemma:hull} states this more formally:
 \begin{lemma}[Convex Hull Heuristic]
   \label{lemma:hull}
   Let $p \in \mathbb{R}^3$, $Q = (q _ 0, q _ 1, \dots, q _ {m-1}) \subset P$ and $\mathbf{C}$ be the
-  compact convex hull created from $H _ i ^ {-} = \{ u \in \mathbb{R}^3 | (q _ i - p ) \cdot (u - q _ i) < 0 \}$,
+  compact convex hull created from $H _ i = \{ u \in \mathbb{R}^3 : (p - q _ i) \cdot (u - q _ i) > 0 \}$,
   then $(w,p) \in \text{RNG}(P,p) \to w \in \mathbf{C}$
 \end{lemma}
 
 \begin{pf}
-  By Lemma \ref{lemma:plane}, all $w$ outside of $\mathbf{C}$ will have some $q _ i \in Q$ in the $\text{Lune}(w,p)$, so cannot have an RNG edge to $p$.
+  By Lemma \ref{lemma:plane}, all $v$ outside of $\mathbf{C}$ will have some $q _ i \in Q$ in the $\text{Lune}(v,p)$, so cannot have an RNG edge to $p$.
 \end{pf}
 
 Lemma \ref{lemma:hull} only guarantees that RNG connections to $p$ fall within the hull, $\mathbf{C}$.
@@ -490,20 +506,21 @@ hull but is thwarted by a point outside the convex hull that is within the lune 
 
 Points outside of the convex hall might influence connections to $p$ but we can bound how
 far these points can be.
-The maximum distance to $p$ and the convex hull bounds what points can influence connections to $p$ to
-that distance:
+Nearby points influencing $p$ can only be a constant factor of the maximum distance of $p$ to the convex hull:
 
 \begin{lemma}[Convex Hull Extension Heuristic]
   \label{lemma:extension}
-  Let $p, \mathbf{C}$ be the anchor point and convex hull as detailed above.
+  Let $p$ be the anchor point and $\mathbf{C}$ be the convex hull as detailed above.
   Let $R _ {\text{max}} = \max _ {u \in \mathbf{C}} |u-p|$ be the maximum distance of the convex hull boundary to $p$.
   All points that could affect $\text{RNG}(P,p)$ lie within a sphere of radius $R _ {\text{max}}$, centered at $p$.
 \end{lemma}
 
 \begin{pf}
-  The maximum lune radius for any neighbor to $p$ is bounded above by $R _ {\text{max}}$.
-  Any point, $w$ such that $|w-p| > D$, will be further away from the maximum lune radius
-  and so can't influence any connection within $\mathbf{C}$.
+  The maximum lune radius for a point, $u$, within the convex hull to $p$ is bounded above by $R _ {\text{max}}$.
+  For a point, $w$, to influence a potential connection of $u$ to $p$, $w$ must lie within the lune created by
+  $u$ and $p$.
+  If $|w-p| > R _ {\text{max}}$, $w$ falls outside of any lune that $p$ might create with points within the convex
+  hull.
 \end{pf}
 
 %%%%
@@ -514,36 +531,40 @@ that distance:
 % THIS DISCUSSION SHOULD GO IN CONCLUSION, NOT HERE
 % WE KEEP MENTIONING IT, IT'S FINE, WE KNOW, JUST MENTION IT IN THE CONCLUSION
 
-The above already suggests a linear time algorithm by starting at a grid cell where $p$ resides
-and adding neighboring points from neighboring grid cells until a compact convex hull has been achieved
-that meets some maximum radius criteria.
-All points within a sphere centered at $p$ can then be added and a naive relative neighborhood graph algorithm
-can be run on the reduced neighbor set.
-It can be shown that for a constant number of neighbors, the maximum distance of $p$ to the convex hull is bounded,
-giving an expected linear time algorithm for random points in the unit cube.
-
-While there is an expected constant number of neighbors that make up the convex hull,
-a natural operation to find radius bounds would be to convert to
-a point representation via a vertex enumeration procedure, inflating the runtime constants were a
-naive vertex enumeration algorithm to be used.
-There may be ways of speeding up the vertex enumeration by considering the structure of the problem in question
-but this methodology is not pursued further in this paper.
+%The above already suggests a linear time algorithm by starting at a grid cell where $p$ resides
+%and adding neighboring points from neighboring grid cells until a compact convex hull has been achieved
+%that meets some maximum radius criteria.
+%All points within a sphere centered at $p$ can then be added and a naive relative neighborhood graph algorithm
+%can be run on the reduced neighbor set.
+%It can be shown that for a constant number of neighbors, the maximum distance of $p$ to the convex hull is bounded,
+%giving an expected linear time algorithm for random points in the unit cube.
+%
+%While there is an expected constant number of neighbors that make up the convex hull,
+%a natural operation to find radius bounds would be to convert to
+%a point representation via a vertex enumeration procedure, inflating the runtime constants were a
+%naive vertex enumeration algorithm to be used.
+%There may be ways of speeding up the vertex enumeration by considering the structure of the problem in question
+%but this methodology is not pursued further in this paper.
 
 %%%%
 %%%%
 %%%%
 
 A bounding box cube is used as a proxy for the convex hull.
-The bounding box cube, called a \emph{fence}, has certain key point points on each face that will be used
-to indicate when a cutting plane has partitioned portions of the fence from the anchor point, $p$.
-Once all portions have been partitioned, a process that will be called \emph{securing the fence},
-there's a guarantee of an embedded convex hull within the fence and only the points within the fence need to be
-considered for $\text{RNG}(P,p)$ connections.
+The bounding box cube, called a \emph{fence}, has each face partitioned into regular squares,
+called \emph{fence face patches} (or just a \emph{fence patch}).
+Plane partitions are used to partition the fence patch from the anchor point.
+%has certain key points on each cube face that will be used
+%to indicate when a plane has partitioned portions of the fence face from the anchor point, $p$.
+Once all fence face patch portions have been partitioned from $p$, a process that will be called \emph{securing the fence},
+this implies a compact convex hull contained within the fence.
+%The fence cube is extended, as required by Lemma \ref{lemma:extension}, and all points within the extension
+%are collected in consideration for the relative neighborhood graph connections to $p$.
 
-For the anchor point $p$, only $\text{RNG}(P,p)$ connections can happen within the secured fence but, as alluded
-to with \ref{lemma:extension}, other points outside of the secured fence might influence connections within.
-We will see that a constant factor of fence radius need be considered to add additional points to the naive
-relative neighborhood graph computation.
+%For the anchor point $p$, only $\text{RNG}(P,p)$ connections can happen within the secured fence but, as alluded
+%to with \ref{lemma:extension}, other points outside of the secured fence might influence connections within.
+%We will see that a constant factor of fence radius need be considered to add additional points to the naive
+%relative neighborhood graph computation.
 
 A secured fence necessarily implies a compact convex hull embedded within the fence but the other direction
 is not true in general, as there can be a convex hull whose volume is completely contained within the
@@ -551,20 +572,32 @@ fence but whose partition planes do not secure the fence.
 We will see that this has no effect on the expected linear runtime, as securing the fence for an individual
 anchor point is expected to use a constant number of neighbors.
 
-\begin{lemma}[Cube Bounds on Interior Convex Hull]
-  \label{lemma:cubeConvexHull}
-  Let ${\bf C}$ an axis aligned cube with each face broken into $m$ non overlapping axis aligned
-  square patches, where the four corners of patchs are
-  $\sigma _ {d,j,k}$, $d \in \{ \pm x, \pm y, \pm z \}$, $j \in \{0 \dots (m-1)\}$, $k \in \{0,1,2,3\}$,
-  and with $N _ {\sigm _ {d,j}}$ the normal of the patch away from the center.
-  Let ${\bf H} = (H _ 0, H _ 1, \dots, H _ {s-1})$ be a list of half plane cuts.
-  If, for every patch $\sigma _ {d,j}$ there exists a half plane $H _ i$, with normal $N _ {H _ i}$,
-  such that $N _ {\sigma _ {d,j}} \cdot N _ {H _ i} < 0$ and each patch corner point is on the other
-  side of the half plane cut, $N _ {H _ i} \cdot N _ {\sigma _ {d,j,k}} < 0$,
-  then ${\bf C}$ bounds a compact convex hull made from the intersection of ${\bf H}$.
-\end{lemma}
+% probably a theorem...
+
+\begin{theorem}[Cube Bounds on Interior Convex Hull]
+  \label{thm:cubeConvexHull}
+  \ \\
+  Let $\mathbf{B}$ an axis aligned cube centered at the origin, with side length $L _ {\mathbf{B}}$.
+  Let each face be covered in $m$ non-overlapping axis aligned
+  square patches, $\rho _ {d,j}$, where the four corners of patchs are
+  $\rho _ {d,j,k}$ ($d \in \{ \pm x, \pm y, \pm z \}$, $j \in \{0 \dots (m-1)\}$, $k \in \{0,1,2,3\}$). \\
+  %and with $N _ {\rho _ {d,j}}$ the normal of the patch away from the center. \\
+  Let $\mathbf{H} = (H _ 0, H _ 1, \dots, H _ {s-1})$ be a list of half plane cuts with
+  $Q = (q _ 0, q _ 1, \dots, q _ {s-1})$ be a respective point on the plane cut. \\
+  If, for every patch $\rho _ {d,j}$ there exists a half plane $H _ i$, with normal $N _ {H _ i}$,
+  such that every corner of the patch, $k \in \{0,1,2,3\}$, $\rho _ {d,j,k} \cdot N _ {H _ i} < 0$ and
+  $(\rho _ {d,j,k} - q _ i) \cdot N _ {H _ i} < 0$,
+  then for all axis aligned cubes, $\mathbf{B'}$ centered at zero of side length $L _ {\mathbf{B'}} \ge L _ {\mathbf{B}}$
+  %, for a given patch, all patch corner point are on the other
+  %side of the half plane cut, $N _ {H _ i} \cdot (\rho _ {d,j,k} - q _ i) < 0$,
+  %then
+  , $\cap _ i H _i$ ($\ne \emptyset$?) bounds a compact convex hull completely contained in $\mathbf{B'}$.
+\end{theorem}
 
 \begin{pf}
+  The four points of $\rho _ {d,j}$, $(c\rho _ {d,j,0},\rho _ {d,j,1},\rho _ {d,j,2},\rho _ {d,j,3})$  reate a frustum,
+  with any point lying on the patch of $\rho _ {d,j}$ defined by $\sum _ k t _ k \rho _ {d,j,k}$ with $\sum _ k t _ k = 1$, $t _ k \ge 0$.
+
   ...
 \end{pf}
 
@@ -727,13 +760,13 @@ graph is known for the case of points distributed uniformly in the unit cube.
 Randomness of point distribution eliminates many pathological cases that would need to be taken care of with
 a fully deterministic algorithm.
 The bounded maximum degree of the relative neighborhood graph in 3D, along with the randomness assumption, allow
-a construction of an expected linear time algorithm by employing a coarse cut plane heuristic that allows
+a construction of an expected linear time algorithm by employing a coarse plane partition heuristic that allows
 only local neighborhoods of points to be considered.
 A finite neighborhood makes naive calculations constant time, allowing for an overall expected linear runtime algorithm.
 
 The algorithm presented also answers a question posed by Katajainen and Nevalainen \cite{KN85} of whether there's a simpler
 algorithm that wouldn't need to handle points close to the border differently.
-The algorithm presented avoids needing to consider side or corner regions independently as the the cut plane
+The algorithm presented avoids needing to consider side or corner regions independently as the the plane partition
 heuristic provides an orthogonal partition and fences near the edge of the region will be secured by falling out of
 bounds.
 

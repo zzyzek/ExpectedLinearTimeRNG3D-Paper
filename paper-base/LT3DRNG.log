@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.1.30)  4 AUG 2026 23:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.1.30)  5 AUG 2026 11:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -918,112 +918,110 @@ LaTeX Warning: Reference `TK' on page 1 undefined on input line 128.
 
 LaTeX Warning: Reference `TK' on page 1 undefined on input line 128.
 
+Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
+put line 187.
 LaTeX Font Info:    Trying to load font information for T1+cmss on input line 2
-02.
+41.
 (/usr/share/texlive/texmf-dist/tex/latex/base/t1cmss.fd
 File: t1cmss.fd 2019/12/16 v2.5j Standard LaTeX font definitions
 ) [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
  <./thumbnails/cas-email.jpeg> <./thumbnails/cas-url.jpeg>]
-<rng_cutplane_heuristic.pdf, id=27, 391.4625pt x 391.4625pt>
+
+LaTeX Warning: Reference `TK' on page 2 undefined on input line 247.
+
+
+Underfull \hbox (badness 1616) in paragraph at lines 321--328
+[]\T1/stix/m/n/10 The aux-il-iary func-tion, \T1/stix/m/it/10 Grid-Perime-ter-C
+ell-Points\T1/stix/m/n/10 , re-
+ []
+
+<rng_cutplane_heuristic.pdf, id=39, 391.4625pt x 391.4625pt>
 File: rng_cutplane_heuristic.pdf Graphic file (type pdf)
 <use rng_cutplane_heuristic.pdf>
-Package pdftex.def Info: rng_cutplane_heuristic.pdf  used on input line 206.
+Package pdftex.def Info: rng_cutplane_heuristic.pdf  used on input line 370.
 (pdftex.def)             Requested size: 214.42754pt x 214.42697pt.
-
-Underfull \hbox (badness 1142) in paragraph at lines 223--232
+[2]
+Underfull \hbox (badness 1142) in paragraph at lines 387--396
 []\T1/stix/m/n/10 Instead of work-ing with the con-vex hull di-rectly, a
  []
 
 
-LaTeX Warning: Reference `TK' on page 2 undefined on input line 235.
+LaTeX Warning: Reference `TK' on page 3 undefined on input line 399.
 
 
-LaTeX Warning: Reference `TK' on page 2 undefined on input line 264.
+LaTeX Warning: Reference `TK' on page 3 undefined on input line 428.
 
-[2pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) 
+[3pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) 
 has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.316 
+l.480 
        <./rng_cutplane_heuristic.pdf>]
 LaTeX Font Info:    Trying to load font information for TS1+stix on input line 
-326.
+490.
 
 (/usr/share/texlive/texmf-dist/tex/latex/stix/ts1stix.fd
 File: ts1stix.fd 2015/04/17 v1.1.2-latex STIX TS1 font definitions
 )
 
-LaTeX Warning: Reference `TK' on page 3 undefined on input line 355.
+LaTeX Warning: Reference `TK' on page 4 undefined on input line 519.
 
 
-LaTeX Warning: Reference `TK' on page 3 undefined on input line 358.
+LaTeX Warning: Reference `TK' on page 4 undefined on input line 522.
 
 \c@theorem=\count347
 \c@rmk=\count348
 \c@pf=\count349
 
-Underfull \hbox (badness 1442) in paragraph at lines 460--462
+Underfull \hbox (badness 1442) in paragraph at lines 624--626
 []\T1/stix/m/it/10 if $\LS1/stix/m/it/10 p; q; w \LS1/stix/m/n/10 Ë \LS1/stixbb
 /m/n/10 R[]$
  []
 
 
-LaTeX Warning: Reference `TK' on page 3 undefined on input line 504.
+LaTeX Warning: Reference `TK' on page 4 undefined on input line 668.
 
-[3]
-Underfull \hbox (badness 5817) in paragraph at lines 513--516
+[4]
+Underfull \hbox (badness 5817) in paragraph at lines 677--680
 []\T1/stix/m/it/10 Let $\LS1/stix/m/it/10 p$ \T1/stix/m/it/10 be
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 584--595
+Underfull \hbox (badness 10000) in paragraph at lines 748--759
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 608--611
+Underfull \hbox (badness 10000) in paragraph at lines 772--775
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 657--661
+Underfull \hbox (badness 10000) in paragraph at lines 821--825
 
- []
-
-[4]
-Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 727.
-
-
-LaTeX Warning: Reference `TK' on page 5 undefined on input line 829.
-
-
-Underfull \hbox (badness 1616) in paragraph at lines 832--843
-[]\T1/stix/m/n/10 The aux-il-iary func-tion, \T1/stix/m/it/10 Grid-Perime-ter-C
-ell-Points\T1/stix/m/n/10 , re-
  []
 
 [5]
-Overfull \hbox (1.69551pt too wide) in paragraph at lines 866--872
+Overfull \hbox (1.69551pt too wide) in paragraph at lines 898--904
 []\T1/stix/m/n/10 Randomness of point dis-tri-bu-tion elim-i-nates many patho-
  []
 
 
-Package natbib Warning: Citation `KN85' on page 6 undefined on input line 873.
+Package natbib Warning: Citation `KN85' on page 6 undefined on input line 905.
 
 
-LaTeX Warning: Reference `TK' on page 6 undefined on input line 944.
+LaTeX Warning: Reference `TK' on page 6 undefined on input line 976.
 
-[6]
-Overfull \hbox (10.94406pt too wide) in paragraph at lines 1129--1132
+[6] [7]
+Overfull \hbox (10.94406pt too wide) in paragraph at lines 1161--1164
 \T1/stix/m/n/10 one of the six darts, so we would ex-pect roughly $\LS1/stix/m/
 n/10 11_.6_1198/ =
  []
 
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 8.50006pt on input line 1150.
+(Font)              scaled to size 8.50006pt on input line 1182.
 (./LT3DRNG.bbl
 
 Package natbib Warning: Empty `thebibliography' environment on input line 15.
@@ -1032,7 +1030,7 @@ Package natbib Warning: Empty `thebibliography' environment on input line 15.
 
 Package natbib Warning: There were undefined citations.
 
-[7] [8
+[8
 
 ] (./LT3DRNG.aux)
 
@@ -1042,10 +1040,10 @@ Package rerunfilecheck Info: File `LT3DRNG.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 17646 strings out of 480171
- 267395 string characters out of 5894489
- 556786 words of memory out of 5000000
- 35243 multiletter control sequences out of 15000+600000
+ 17648 strings out of 480171
+ 267425 string characters out of 5894489
+ 563786 words of memory out of 5000000
+ 35245 multiletter control sequences out of 15000+600000
  572043 words of font info for 152 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
  75i,11n,93p,557b,466s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1066,10 +1064,10 @@ ic/stix/stix-mathrm-bold.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
 stix/stix-mathrm.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/stix/sti
 x-mathscr.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/stix/stix-maths
 f.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/stix/stix-mathtt.pfb>
-Output written on LT3DRNG.pdf (8 pages, 300018 bytes).
+Output written on LT3DRNG.pdf (8 pages, 301336 bytes).
 PDF statistics:
- 187 PDF objects out of 1000 (max. 8388607)
- 139 compressed objects within 2 object streams
+ 194 PDF objects out of 1000 (max. 8388607)
+ 146 compressed objects within 2 object streams
  37 named destinations out of 1000 (max. 500000)
  16 words of extra memory for PDF output out of 10000 (max. 10000000)
 

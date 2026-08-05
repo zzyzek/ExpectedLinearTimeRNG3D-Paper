@@ -172,6 +172,170 @@ OUTLINE
   for plane cut heuristic
 
 
+\section{Algorithm}
+
+All points eventually will be evaluated through a naive relative neighborhood graph
+calculation, relative to an \emph{anchor point}, $p$.
+Algorithm \ref{alg:RNGPointNaive} provides the pseudo code that does the all pairs
+test of points in $Q$ to the anchor point, $p$.
+
+Algorithm \ref{alg:RNGPointNaive} is naively $O(|Q|^2)$ and as will be detailed
+in a later section, $|Q|$ will be shown to be constant, making the naive
+pairwise point testing constant time.
+
+\begin{algorithm}
+  \caption{Single point naive Relative Neighborhood Graph for the list $Q$ to test for connections to $p$}\label{alg:RNGPointNaive}
+  \begin{algorithmic}[1]
+    \Procedure{RNGPointNaive}{Q, p}
+      \For{ $q \in Q / \{p\}$ }
+        \State $\text{isConnected } = \text{ \emph{False}}$
+        \For{ $u \in Q / \{p,q\}$ }
+          \If{ $\text{InLune}(p,q,u)$ }
+            \State $\text{isConnected } = \text{ \emph{False}}$
+          \EndIf
+        \EndFor
+        \If{ $\text{isConnected } == \text{ \emph{True}}$ }
+          $E = E \cup (p,q)$
+        \EndIf
+      \EndFor
+
+      \State $\text{return } E$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+Algorithm \ref{alg:RNGSPoIF} intializes the grid and then processes
+each point individually with a call to the Algorithm \ref{alg:RNGpSPoIF}.
+
+\begin{algorithm}
+  \caption{Relative Neighborhood Graph, Secure Posts on Increasing Fence (SPoIF)}\label{alg:RNGSPoIF}
+  \begin{algorithmic}[1]
+    \Procedure{RNGSPoIF}{P}
+    \State \vspace{0.5em} $E = \{\}$
+    \State \vspace{0.5em} $N = |P|, \ \ \ \ N_s = \lceil N^{\frac{1}{3}} \rceil, \ \ \ \ s = \frac{1}{N_s}$,
+    \State \vspace{0.5em} $B[0:N_s][0:N_s][0:N_s] = \emptyset$
+    \For{$p \in P$}
+      \vspace{0.5em} \State $\text{append}( B[ \lfloor N_s  p_x \rfloor ][ \lfloor N_s  p_y \rfloor ][ \lfloor N_s  p_z \rfloor ] , p )$
+    \EndFor
+
+    \For{$p \in P$}
+      \vspace{0.5em} \State $E = E \cup \text{RNGPointSPoIF}(B,P,p)$
+    \EndFor
+
+    \State $\text{return } E$
+
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+Algorithm \ref{alg:RNGpSPoIF} processes each point individually by
+looking at a local grid neighborhood of the grid,
+and testing nearby points to see if they've secured the fence.
+The fence securitization is done by testing that all points in the frusturm that
+make the fence face patch, called \emph{fence posts}, are \emph{secured}.
+The vector in the direction of $(p-q)$ and the fence post point relative
+to the grid cell that $p$ lies in are tested against each other to make
+sure the fence post points lie on the opposite side of the implied
+half plane cut defined by the normal of $(p-q)$ and will do so
+as the fence grid grows.
+
+Once the fence has been secured, extra points past the fence need to be
+added to ensure that all nearby points that might affect connections to the
+anchor point are included to the naive relative neighborhood graph calculation.
+The $R _ {\text{max}}$ is calculated empirically during the course of
+Algorithm \ref{alg:RNGpSPoIF} but is bounded above by a constant factor
+(see Appendix \ref{TK}).
+
+After fence securitization and all nearby relevant points have been collected,
+a call to the naive relative neighborhood
+graph, on the collected points relative to the anchor point, is called
+in Algorithm \ref{alg:RNGPointNaive}.
+
+
+\begin{algorithm}
+  \caption{Single point Relative Neighborhood Graph, Secure Posts on Increasing Fence}\label{alg:RNGpSPoIF}
+  \begin{algorithmic}[1]
+    \Procedure{RNGPointSPoIF}{B, P, p}
+
+      \State Initialize $\text{FencePostCluster}[]$ entries to $\text{False}$ %, \\
+        %take $2 \times 2$ clusters of fence posts for each face
+
+      \State $Q = \{\}, \ \ R _f = 0, \ \ R _ {\text{max}} = 0$
+      %\State $Q = \{\}$
+      \State $c = $ grid cell $p$ falls in
+
+      \For{ $(R _ f \le N_s)$ \ {\bf and} \\  \hspace{3.0em} (\emph{False} $\in$ FencePostCluster) }
+        \State $Q' = \text{GridPerimeterCellPoints}(B, p, R_f) / \{p\}$
+        \For{ $q \in Q'$ }
+          \State $Q = Q \cup \{q\}$
+          \State $R' =$ max grid cell distance from $c$ \\
+          \hspace{6.5em} $\text{Lune}(p,q)$ falls in
+          %\State $R _ {\text{max}} = $ maximum of $R_{\text{max}}$ and grid cell distance that lune of $(p,q)$ intersects
+          \State $R _ {\text{max}} = \max(R_{\text{max}}, R')$
+        \EndFor
+
+        \For{ $q \in  Q'$ }
+          \State Define $\rho(u) = \text{sgn}((p - q) \cdot (u - q))$
+          \State Define $\sigma(u) = \text{sgn}(u \cdot (u - q))$
+          \For{ every cluster, $\gamma$ }
+            \If{ $\gamma$ is out of bounds }
+              \State $\text{FencePostCluster}[\gamma] = \text{\emph{True}}$
+            \ElsIf{ every $v \in \gamma$, \\
+                    \hspace{8.65em} $\rho(v) = -\rho(p)$ {\bf and } \\
+                    \hspace{8.65em} $\sigma(v) = -\sigma(p)$ }
+              \State $\text{FencePostCluster}[\gamma] = \text{\emph{True}}$
+            \EndIf
+          \EndFor
+        \EndFor
+        $R _ f = R _ f + 1 $
+      \EndFor
+
+      \For{ $R _ e = [R _ f+1 : R _ {\text{max}} ]$ }
+        \State $Q'' = \text{GridPerimeterCellPoints}(B, p, R_e)$
+        %\For{ $q \in \text{GridPerimeterCellPoints}(B, p, R_f) / \{p\}$ }
+        \For{ $q \in Q''$ }
+          \State $Q = Q \cup \{q\}$
+        \EndFor
+      \EndFor
+
+      \State $\text{return } \text{RNGPointNaive}( Q, p )$
+
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+%Each cluster in $\text{FencePostCluster}[]$ represents a small section of one of the bounding cube faces.
+%One choice of clusters of points is a $3 \times 3$ grid of posts, evenly spaced on each of the bounding
+%cube faces.
+%The $3 \times 3$ posts are then grouped into neighbor $2 \times 2$ \emph{clusters}, for a total of $4$
+%clusters per face ($6 \cdot 4 = 24$ in total, for all six faces).
+%
+%For a plane to partition a part of the bounding cube face, all posts within the cluster must be partitioned
+%from the anchor point, which will be called \emph{securing} the cluster.
+%Multiple clusters can be partitioned (\emph{secured}) by the same partioning plane, so long as individual
+%clusters are fully partitioned.
+%Clusters that fall out of bounds are marked as secured.
+%Figure \ref{TK} shows an example highlighting the posts on a bounding cube face,
+%its clusters, partitions and invalid partial partitions.
+
+The auxiliary function, \emph{GridPerimeterCellPoints},
+returns points within the grid, $B$,
+centered at the grid cell that $p$ resides in and that lie an integral $R$ distance away.
+The list of points within the enumeration the shell of cells at distance $R$ is returned, with cells
+falling completely out of bounds skipped over.
+A small note that the initial call of \emph{GridPerimeterCellPoints} needs to exclude anchor point,
+$p$, as the starting grid cell will include the anchor point in question.
+
+In the worst case, Algorithm \ref{alg:RNGpSPoIF} will iterate until it encompases all points within the grid
+when the \emph{FencePostCluster}
+has fallen completely out of bounds.
+In such a case, Algorithm \ref{alg:RNGPointNaive} is run on all points and is equivalent to the degenerate
+condition of running a naive $O(N^2)$ relative neighborhood graph computation on all neighbor points to an
+anchor point.
+
+For random point distribution in the unit cube, we expect much better runtime as the the expected
+number of potential neighbors collected will be bounded.
+
 
 \section{Motivation and Structure}
 
@@ -720,138 +884,6 @@ TODO:
 
 - $SPoIF:RNG(P)$ runs in expected linear time
 
-
-\section{Algorithm}
-
-\begin{algorithm}
-  \caption{Single point naive Relative Neighborhood Graph}\label{alg:RNGPointNaive}
-  \begin{algorithmic}[1]
-    \Procedure{RNGPointNaive}{Q, p}
-      \For{ $q \in Q / \{p\}$ }
-        \State $\text{isConnected } = \text{ \emph{False}}$
-        \For{ $u \in Q / \{p,q\}$ }
-          \If{ $\text{InLune}(p,q,u)$ }
-            \State $\text{isConnected } = \text{ \emph{False}}$
-          \EndIf
-        \EndFor
-        \If{ $\text{isConnected } == \text{ \emph{True}}$ }
-          $E = E \cup (p,q)$
-        \EndIf
-      \EndFor
-
-      \State $\text{return } E$
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-
-\begin{algorithm}
-  \caption{Relative Neighborhood Graph, Secure Posts on Increasing Fence (SPoIF)}\label{alg:RNGSPoIF}
-  \begin{algorithmic}[1]
-    \Procedure{RNGSPoIF}{P}
-    \State \vspace{0.5em} $E = \{\}$
-    \State \vspace{0.5em} $N = |P|, \ \ \ \ N_s = \lceil N^{\frac{1}{3}} \rceil, \ \ \ \ s = \frac{1}{N_s}$,
-    \State \vspace{0.5em} $B[0:N_s][0:N_s][0:N_s] = \emptyset$
-    \For{$p \in P$}
-      \vspace{0.5em} \State $\text{append}( B[ \lfloor N_s  p_x \rfloor ][ \lfloor N_s  p_y \rfloor ][ \lfloor N_s  p_z \rfloor ] , p )$
-    \EndFor
-
-    \For{$p \in P$}
-      \vspace{0.5em} \State $E = E \cup \text{RNGPointSPoIF}(B,P,p)$
-    \EndFor
-
-    \State $\text{return } E$
-
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-\begin{algorithm}
-  \caption{Single point Relative Neighborhood Graph, Secure Posts on Increasing Fence}\label{alg:RNGpSPoIF}
-  \begin{algorithmic}[1]
-    \Procedure{RNGPointSPoIF}{B, P, p}
-
-      \State Initialize $\text{FencePostCluster}[]$ entries to $\text{False}$ %, \\
-        %take $2 \times 2$ clusters of fence posts for each face
-
-      \State $Q = \{\}, \ \ R _f = 0, \ \ R _ {\text{max}} = 0$
-      %\State $Q = \{\}$
-      \State $c = $ grid cell $p$ falls in
-
-      \For{ $(R _ f \le N_s) \ \& (\text{\emph{False}} \in \text{FencePostCluster})$ }
-        \State $Q' = \text{GridPerimeterCellPoints}(B, p, R_f) / \{p\}$
-        \For{ $q \in Q'$ }
-          \State $Q = Q \cup \{q\}$
-          \State $R' =$ max grid cell distance from $c$ \\
-          \hspace{6.5em} $\text{Lune}(p,q)$ falls in
-          %\State $R _ {\text{max}} = $ maximum of $R_{\text{max}}$ and grid cell distance that lune of $(p,q)$ intersects
-          \State $R _ {\text{max}} = \max(R_{\text{max}}, R')$
-        \EndFor
-
-        \For{ $q \in  Q'$ }
-          \State Define $\rho(u) = \text{sgn}((q-p) \cdot (q - u))$
-          \For{ every cluster, $FPC$ }
-            \If{ (every $v \in FPC$, $\rho(v) = - \rho(p)$) { \bf or } \\
-                \hspace{7.0em} ($FPC$ is out of bounds) }
-              %\State Mark cluster in $\text{FencePostCluster}$ as $\text{\emph{True}}$
-              \State $\text{FencePostCluster}[FPC] = \text{\emph{True}}$
-            \EndIf
-          \EndFor
-        \EndFor
-        $R _ f = R _ f + 1 $
-      \EndFor
-
-      \For{ $R _ e = [R _ f+1 : R _ {\text{max}} ]$ }
-        \State $Q'' = \text{GridPerimeterCellPoints}(B, p, R_e)$
-        %\For{ $q \in \text{GridPerimeterCellPoints}(B, p, R_f) / \{p\}$ }
-        \For{ $q \in Q''$ }
-          \State $Q = Q \cup \{q\}$
-        \EndFor
-      \EndFor
-
-      \State $\text{return } \text{RNGPointNaive}( Q, p )$
-
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
-Each cluster in $\text{FencePostCluster}[]$ represents a small section of one of the bounding cube faces.
-One choice of clusters of points is a $3 \times 3$ grid of posts, evenly spaced on each of the bounding
-cube faces.
-The $3 \times 3$ posts are then grouped into neighbor $2 \times 2$ \emph{clusters}, for a total of $4$
-clusters per face ($6 \cdot 4 = 24$ in total, for all six faces).
-
-For a plane to partition a part of the bounding cube face, all posts within the cluster must be partitioned
-from the anchor point, which will be called \emph{securing} the cluster.
-Multiple clusters can be partitioned (\emph{secured}) by the same partioning plane, so long as individual
-clusters are fully partitioned.
-Clusters that fall out of bounds are marked as secured.
-Figure \ref{TK} shows an example highlighting the posts on a bounding cube face,
-its clusters, partitions and invalid partial partitions.
-
-The auxiliary function, \emph{GridPerimeterCellPoints},
-%$\text{GridPerimeterCellPoints}(B,p,R)$
-returns points within the grid, $B$,
-centered at the grid cell that $p$ resides in and that lie an integral $R$ distance away.
-The list of points within the enumeration the shell of cells at distance $R$ is returned, with cells
-falling completely out of bounds skipped over.
-A small note that the initial call of
-%$\text{GridPerimeterCellPoints}(B,p,0)$
-\emph{GridPerimeterCellPoints}
-needs to exclude anchor point,
-$p$, as the starting grid cell will include the anchor point in question.
-
-In the worst case, Algorithm \ref{alg:RNGpSPoIF} will iterate until it encompases all points within the grid
-when the
-%$\text{FencePostCluster}[]$
-\emph{FencePostCluster}
-has fallen completely out of bounds.
-In such a case, Algorithm \ref{alg:RNGPointNaive} is run on all points and is equivalent to the degenerate
-condition of running a naive $O(n^2)$ relative neighborhood graph computation on all neighbor points to an
-anchor point.
-
-For random point distribution in the unit cube, we expect much better runtime as the the expected
-number of potential neighbors collected will be bounded.
 
 
 

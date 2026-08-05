@@ -590,42 +590,104 @@ anchor point is expected to use a constant number of neighbors.
   Let $\mathbf{H} = (H _ 0, H _ 1, \dots, H _ {s-1})$ be a list of half plane cuts with
   $Q = (q _ 0, q _ 1, \dots, q _ {s-1})$ be a respective point on the plane cut. \\
   If, for every patch $\rho _ {d,j}$ there exists a half plane $H _ i$, with normal $N _ {H _ i}$,
-  such that every corner of the patch, $k \in \{0,1,2,3\}$, $\rho _ {d,j,k} \cdot N _ {H _ i} < 0$ and
-  $(\rho _ {d,j,k} - q _ i) \cdot N _ {H _ i} < 0$,
-  then for all axis aligned cubes, $\mathbf{B'}$ centered at zero of side length $L \ge L _ {\mathbf{B}}$
+  such that every corner of the patch: \\ % $k \in \{0,1,2,3\}$,
+  %$\rho _ {d,j,k} \cdot N _ {H _ i} < 0$ and
+  $$
+  (\rho _ {d,j,k} - q _ i) \cdot N _ {H _ i} < 0
+  $$
+  then $\cap _ i H _ i$ creates a compact convex hull that is strictly contained in $\mathbf{B}$.
+
+  %for all axis aligned cubes, $\mathbf{B'}$ centered at zero of side length $L \ge L _ {\mathbf{B}}$
   %, for a given patch, all patch corner point are on the other
   %side of the half plane cut, $N _ {H _ i} \cdot (\rho _ {d,j,k} - q _ i) < 0$,
   %then
-  , $\cap _ i H _i$ ($\ne \emptyset$?) bounds a compact convex hull completely contained in $\mathbf{B'}$.
+  %, $\cap _ i H _i$ ($\ne \emptyset$?) bounds a compact convex hull completely contained in $\mathbf{B'}$.
 \end{theorem}
 
 \begin{pf}
   The four points of $\rho _ {d,j}$, $(c\rho _ {d,j,0},\rho _ {d,j,1},\rho _ {d,j,2},\rho _ {d,j,3})$  create a frustum.
-  A point lying on the patch is defined by $u = \sum _ k L t _ k \rho _ {d,j,k}$ with $L \ge 1, \sum _ k t _k = 1, t _k \ge 0$. \\
+  A point lying on the patch is defined by $u = \sum _ k t _ k \rho _ {d,j,k}$ with $\sum _ k t _k = 1, t _k \ge 0$. \\
   Consider:\\
   $$
   \begin{array}{ll}
    & ( u - q _ i ) \cdot N _ {H _ i}  \\
-    = & ( (\sum _ k L t _ k \rho _ {d,j,k} ) - q _ i ) \cdot N _ {H _ i} \\
-    = & ( (\sum _ k L t _ k \rho _ {d,j,k} ) - (\sum _ k t _ k ) q _ i ) \cdot N _ {H _ i} \\
-    = & t _ k (\sum _ k (L-1) \rho _ {d,j,k} \cdot N _ { H _ i} ) + t _ k ( \rho _ {d,j,k} - q _ i ) \cdot N _ {H _ i}
+    %= & ( (\sum _ k L t _ k \rho _ {d,j,k} ) - q _ i ) \cdot N _ {H _ i} \\
+    %= & ( (\sum _ k L t _ k \rho _ {d,j,k} ) - (\sum _ k t _ k ) q _ i ) \cdot N _ {H _ i} \\
+    %= & t _ k (\sum _ k (L-1) \rho _ {d,j,k} \cdot N _ { H _ i} ) + t _ k ( \rho _ {d,j,k} - q _ i ) \cdot N _ {H _ i} \\
+    = & ( (\sum _ k t _ k \rho _ {d,j,k} ) - q _ i ) \cdot N _ {H _ i} \\
+    = & ( (\sum _ k t _ k \rho _ {d,j,k} ) - (\sum _ k t _ k ) q _ i ) \cdot N _ {H _ i} \\
+    = & \sum _ k [ t _ k ( \rho _ {d,j,k} - q _ i ) \cdot N _ {H _ i} ] \\
+    < & 0
   \end{array}
   $$
-  Since $t _ k \ge 0$ and $L \ge 1$, each term is non-positive, each point on the scaled patch, thus the whole patch, is
-  partitioned by the plane defined by $H _ i$. \\
-  By assumption, all patches have been secured for a $L = L _ {\mathbf{B}}$.
-  If there is a $w$ that is outside of the cube fence, then it must be on a patch for some fence size $L _ w$, but
-  since $L _ w > L$, this is contradiction, disallowing the existence of $w$.
+  %Since $t _ k \ge 0$, $L \ge 1$ and each term is non-positive.
+  Since $t _ k \ge 0$ with at least one non-zero $t _ k$ and $(\rho _ {d,j,k} - q_i) \cdot N _ {H _ i} < 0$ by assumption.
+  Every point on the face of the cube $\mathbf{B}$ lies on the negative side of some half plane cut, bounding a compact
+  convex hull within.
+  %each point on the scaled patch, thus the whole patch, is partitioned by the plane defined by $H _ i$. \\
+  %By assumption, all patches have been secured for $L = L _ {\mathbf{B}}$.
+  %If there is a $w$ that was part of the convex hull but outside of the cube fence,
+  %then $w$ must be on a patch for some fence size $L _ w$.
+  %Since $L _ w > L$, this is contradiction, disallowing the existence of $w$.
 \end{pf}
 
-Once a patch $\rho _ {d,j}$ is secured by a $H _ i$, it's secured in perpetuity for any larger bounding cube $\mathbf{B}$.
-Securing a patch is a stronger condition than having each of the patch points be partitioned for a given side length.
-A secure patch is partitioned no matter how big the fence cube gets, ensuring that as a cube fence grows, if a patch is
-secured at some point in the past, it will remain secure in the future.
+The SPoIF algorithm grows the fence if the fence patches haven't been secured.
+In order to consider patches secured, an extra condition is needed to make sure the half plane will
+keep the patch partitioned as the fence grows.
 
-Theorem \ref{thm:cubeConvexHull} allows us to secure patches with candidate nearby points to an anchor point and not
+
+\begin{theorem}
+  \label{thm:growSecure}
+  \ \\
+  Let $\mathbf{B}$, $\mathbf{H} = (H _ 0, H _ 1, \dots, H _ {m-1})$,
+  $\mathbf{Q} = (q _ 0, q _ 1, \dots, q _ {s-1})$, $N _ {H _ i}$,
+  $\rho _ {d,j}$, $\rho _ {d,j,k}$, 
+  be as defined in Theorem \ref{thm:cubeConvexHull}. \\
+  Let $\mathbf{B'}$ be an axis aligned cube centered at the origin with side length $L _ {\mathbf{B'}} \ge L _ {\mathbf{B}}$,
+  $L = \frac{L _ {\mathbf{B'}}}{L _ {\mathbf{B}}} \ge 1$. \\
+  If, for some patch $\rho _ {d,j}$, 
+  \begin{itemize}
+    \item[ ] $\rho _ {d,j,k} \cdot N _ {H _ i} < 0$ and 
+    \item[ ] $(\rho _ {d,j,k} - q _ i) \cdot N _ {H _ i} < 0$
+  \end{itemize}
+  then the patch $L \cdot \rho _ {d,j}$ remains outside of the halfspace $H _ i$: $L \cdot \rho _ {d,j} \cap H _ i = \emptyset$.
+\end{theorem}
+
+\begin{pf}
+  As in Theorem \ref{thm:cubeConvexHull}, the four points
+  $\rho _ {d,j,k}$, ($k \in \{0,1,2,3\}$),
+  with a point lying on the patch now defined by
+  $v = \sum _ k L t _ k \rho _ {d,j,k}$ with $L \ge 1, \sum _ k t _k = 1, t _k \ge 0$. \\
+  $$
+  \begin{array}{ll}
+   & ( v - q _ i ) \cdot N _ {H _ i}  \\
+    = & ( (\sum _ k L t _ k \rho _ {d,j,k} ) - q _ i ) \cdot N _ {H _ i} \\
+    = & ( (\sum _ k L t _ k \rho _ {d,j,k} ) - (\sum _ k t _ k ) q _ i ) \cdot N _ {H _ i} \\
+    = & \sum _ k [ (L-1) t _ k \rho _ {d,j,k} \cdot N _ { H _ i}  + t _ k ( \rho _ {d,j,k} - q _ i ) \cdot N _ {H _ i} ] \\
+    < & 0
+  \end{array}
+  $$
+  %Since $t _ k \ge 0$, $L \ge 1$ and each term is non-positive.
+  %Here, $L \ge 1$, $t _ k \ge 0$ with at least one non-zero $t _ k$.
+  Both terms in the sum are negative by assumption of $\rho _ {d,j,k} \cdot N _ {H _ i} < 0$
+  and $(\rho _ {d,j,k} - q_i) \cdot N _ {H _ i} < 0$, where the coefficients $(L-1)$ and $t _ k$
+  are non-negative with at least one $t _ k$ positive.
+\end{pf}
+
+Theorem \ref{thm:cubeConvexHull} ensures that a compact convex hull in contained within the fence when the fence
+patches have been partitioned.
+Theorem \ref{thm:growSecure} ensures that once a patch has been secured, it remains secured
+should the fence need to grow.
+Theorem \ref{thm:growSecure} allows us to secure patches with candidate nearby points to an anchor point and not
 reprocess the candidate points as they secure fence patches.
 There may be optimizations that re-use candidate nearby points but these are not pursued further in this paper.
+
+
+
+%Once a patch $\rho _ {d,j}$ is secured by a $H _ i$, it's secured in perpetuity for any larger bounding cube $\mathbf{B}$.
+%Securing a patch is a stronger condition than having each of the patch points be partitioned for a given side length.
+%A secure patch is partitioned no matter how big the fence cube gets, ensuring that as a cube fence grows, if a patch is
+%secured at some point in the past, it will remain secure in the future.
 
 
 %\begin{theorem}[RNGPointSPoIF($P$, $p$) runs in expected $O(1)$ time]
@@ -815,7 +877,7 @@ heuristic provides an orthogonal partition and fences near the edge of the regio
 bounds.
 
 Certain pathological simple geometries can cause problems for the algorithm as presented.
-For example, a "diamond`` shaped distribution might have trouble securing the fence.
+For example, a ``diamond" shaped distribution might have trouble securing the fence.
 Extensions have the potential to overcome limitations while still retaining
 overall linear time execution by,
 %This can maybe be overcome by various methods,

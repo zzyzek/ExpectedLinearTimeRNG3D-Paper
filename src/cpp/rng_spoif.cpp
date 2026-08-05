@@ -35,16 +35,16 @@ static int32_t _v2idir(double *v, int32_t dim) {
 //---
 //---
 
-int i64_d_cmp(const void *_a, const void *_b) {
-  i64_d_t *a, *b;
-
-  a = (i64_d_t *)_a;
-  b = (i64_d_t *)_b;
-
-  if ( a->d < b->d ) { return  1; }
-  if ( a->d > b->d ) { return -1; }
-  return 0;
-}
+//static int i64_d_cmp(const void *_a, const void *_b) {
+//  i64_d_t *a, *b;
+//
+//  a = (i64_d_t *)_a;
+//  b = (i64_d_t *)_b;
+//
+//  if ( a->d < b->d ) { return  1; }
+//  if ( a->d > b->d ) { return -1; }
+//  return 0;
+//}
 
 
 double SPOIF_RNG_RND() {
@@ -972,7 +972,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
          fpv[2] = {0};
 
   double _l2 = 0.0,
-         s = 0.0;
+         s0 = 0.0,
+         s1 = 0.0;
   int64_t q_idx = -1,
           q_idir_oppo = -1,
           path_idx = -1,
@@ -1023,13 +1024,15 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
   // For each grid integer radius (ir), centered at p (m_P[p_idx]),
   // enumerate the grid cells on the ir shell and collect all vertices
   // in them.
+  //
   // If the grid shell side is out of bounds, mark the fence posts
   // as secured on that side.
   // Otherwise, go through all collected vertices to see if they
   // secure the posts within the fence.
-  // If so, collect potential saboteurs from grid positions bounded
-  // by the maximum distance of p to its neighbors and run a naive
-  // RNG to determine relative neighborhood graph.
+  //
+  // When the fence is secured, collect saboteurs after this
+  // main loop to do the naive relative neighborhood graph
+  // connection calculation for the anchor point p_idx.
   //
   // Initial grid radius is taken to be ir=3, collecting neighbor
   // points as we go, as likelyhood is low that anything below
@@ -1173,8 +1176,11 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
               fpv[1] = (m_ds * ((2.0*((double)ir))+1.0) * m_fencePost_v[idir][(m_dim*fpi) + 1]);
             }
 
-            s = (Nqp[0]*(fpv[0]-dq[0])) + (Nqp[1]*(fpv[1]-dq[1]));
-            if (s > 0) {
+            s0 = (Nqp[0]*(fpv[0]-dq[0])) + (Nqp[1]*(fpv[1]-dq[1]));
+            s1 = (Nqp[0]*fpv[0]) + (Nqp[1]*fpv[1]);
+
+            //if (s0 > 0) {
+            if ((s0 > 0) && (s1 > 0)) {
               fps_cache[idir][fpi] = 1;
               n_cluster_secure++;
             }
@@ -1217,7 +1223,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
     _prof_s( m_prof, "spoif2d_v.sabo");
   }
 
-  // create saboteur list to make sure that if there's a phantom edge
+  // Fence has been secured.
+  // Now create saboteur list to make sure that if there's a phantom edge
   // within the fence it'll be sabotaged from a point in the saboteur list.
   //
   max_ir = (int64_t)ceil( (max_dist / m_ds) + 0.5 );
@@ -1245,6 +1252,12 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
     _prof_s( m_prof, "spoif2d_v.fence");
   }
 
+  // Naive relative nieghborhood graph calculation with
+  // some speedups to only consider q_sched points for connections
+  // and saboteur_list points for sabotaging the connection.
+  //
+  // RNGv_fence will add edges to m_Ve_map, the edge structure.
+  //
   res = RNGv_fence(p_idx, q_sched, saboteur_list);
 
   if (m_profile_level > 0) { _prof_e( m_prof, "spoif2d_v.fence"); }
@@ -1362,7 +1375,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
          fpv[3] = {0};
 
   double _l2 = 0.0,
-         s = 0.0;
+         s0 = 0.0,
+         s1 = 0.0;
   int64_t q_idx = -1,
           q_idir_oppo = -1,
           path_idx = -1,
@@ -1531,8 +1545,9 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
               fpv[2] = (m_ds * ((2.0*((double)ir))+1.0) * m_fencePost_v[idir][(m_dim*fpi) + 2]);
             }
 
-            s = (Nqp[0]*(fpv[0]-dq[0])) + (Nqp[1]*(fpv[1]-dq[1])) + (Nqp[2]*(fpv[2]-dq[2]));
-            if (s > 0) {
+            s0 = (Nqp[0]*(fpv[0]-dq[0])) + (Nqp[1]*(fpv[1]-dq[1])) + (Nqp[2]*(fpv[2]-dq[2]));
+            s1 = (Nqp[0]*fpv[0]) + (Nqp[1]*fpv[1]) + (Nqp[2]*fpv[2]);
+            if ((s0 > 0) && (s1 > 0)) {
               fps_cache[idir][fpi] = 1;
               n_cluster_secure++;
             }
@@ -1607,6 +1622,26 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d() {
 
   double fL = 1.0 / 2.0;
 
+  // precomputed table of fence post directional vectors.
+  // These will be rescaled to be on the unit cube
+  // with the fL consant above.
+  //
+  // fpv_template[ idir ][ fencePostIndex ][ xyz ]
+  //
+  // where idir is [+x{0},-x{1}, +y{2},-y{3}, +z{4},-z{5}]
+  //
+  // fencePostIndex order is:
+  //
+  //   6 7 8
+  //   3 4 5
+  //   0 1 2
+  //
+  // looking at the face, from the outside in, if
+  // we were to rotate around the cube in a 'natural'
+  // way.
+  // For example, the boave is looking at the +x face
+  // in the -x direction, with +z up and +y to the right.
+  //
   double fpv_template[6][9][3] = {
     { { 1,-1,-1 }, { 1, 0,-1 }, { 1, 1,-1 },
       { 1,-1, 0 }, { 1, 0, 0 }, { 1, 1, 0 },

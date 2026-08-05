@@ -40,7 +40,7 @@ typedef struct i64_d_type {
   double d;
 } i64_d_t;
 
-int i64_d_cmp(const void *_a, const void *_b);
+//static int i64_d_cmp(const void *_a, const void *_b);
 
 
 //---
@@ -172,6 +172,17 @@ class RELATIVE_NEIGHBORHOOD_GRAPH {
 
       m_fpR_max_ir = _FPR_MAX_IR;
 
+      // idir vectors (3d)
+      //
+      // +x{0}: [ 1, 0, 0]
+      // -x{1}: [-1, 0, 0]
+      //
+      // +y{2}: [ 0, 1, 0]
+      // -y{3}: [ 0,-1, 0]
+      //
+      // +z{4}: [ 0, 0, 1]
+      // -z{5}: [ 0, 0,-1]
+      //
       m_v_idir[0][0] =  1; m_v_idir[0][1] =  0; m_v_idir[0][2] =  0;
       m_v_idir[1][0] = -1; m_v_idir[1][1] =  0; m_v_idir[1][2] =  0;
 

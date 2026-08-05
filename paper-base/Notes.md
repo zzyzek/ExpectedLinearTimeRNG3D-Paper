@@ -53,14 +53,14 @@ normal is positive, but I need to think about this more.
 
 Regardless, we have to:
 
-* add it to the paper as an extra check
+* add it to the paper as an extra check (done)
 * add it to the reference implementation
-  - implement it
+  - implement it (done)
     + it looks like this might already be implemented. Meant as an optimization, this is
       now a necesary check. The line is when calculating the opposite `idir` from the
-      `Nqp` vector and skipping the opposite `idir`.
-  - try to add a test case that triggers this condition to make sure we've actually solved it
-  - go through randomized tests to make sure there's no regression
+      `Nqp` vector and skipping the opposite `idir`. (nope)
+  - try to add a test case that triggers this condition to make sure we've actually solved it (todo)
+  - go through randomized tests to make sure there's no regression (todo)
 
 ---
 

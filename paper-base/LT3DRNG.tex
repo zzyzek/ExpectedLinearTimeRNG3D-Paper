@@ -179,9 +179,10 @@ calculation, relative to an \emph{anchor point}, $p$.
 Algorithm \ref{alg:RNGPointNaive} provides the pseudo code that does the all pairs
 test of points in $Q$ to the anchor point, $p$.
 
-Algorithm \ref{alg:RNGPointNaive} is naively $O(|Q|^2)$ and as will be detailed
-in a later section, $|Q|$ will be shown to be constant, making the naive
-pairwise point testing constant time.
+Algorithm \ref{alg:RNGPointNaive} has $O(|Q|^2)$ runtime.
+As will be detailed
+in a later section, $|Q|$ will be shown to be almost surely bounded above by a constant, making the naive
+pairwise point testing of Algorithm \ref{alg:RNGPointNaive} constant time.
 
 \begin{algorithm}
   \caption{Single point naive Relative Neighborhood Graph for the list $Q$ to test for connections to $p$}\label{alg:RNGPointNaive}
@@ -229,9 +230,41 @@ each point individually with a call to the Algorithm \ref{alg:RNGpSPoIF}.
 \end{algorithm}
 
 Algorithm \ref{alg:RNGpSPoIF} processes each point individually by
-looking at a local grid neighborhood of the grid,
-and testing nearby points to see if they've secured the fence.
-The fence securitization is done by testing that all points in the frusturm that
+looking at a local grid neighborhood of the grid cell occupied by the current
+anchor point $p$ being processed.
+Points within the neighboring cells of $p$
+are then tested to see if they've secured the fence.
+
+Conceptually, cutting planes are built that pass through neighbor points, $q$, with
+normal in the direction of $p$ to $q$.
+The cutting planes are tested against a bounding cube to see if they partition
+the edge faces from $p$.
+
+The bounding cube faces are called a \emph{fence}.
+A fence face that has been partitioned from the anchor point $p$ is said to be \emph{secured},
+with the whole fence being secured once all fence faces have been secured.
+
+To test to see if the fence is secured, points on the fence face are used
+as representatives, which will be called \emph{fence posts}.
+Small patches of the fence face are then represented by clusters of fence posts,
+where the fence posts create the bounding vertices of the square.
+The clusters of fence posts can be tested so that, if they are partitioned
+from $p$, this will ensure that the patch the fence posts bound is also partitioned.
+
+Fence posts clusters that have been partitioned, or secured, imply
+fence patches have been secured.
+Once all patches have been secured, the whole fence will be secured.
+The secured fence will then be used to collect nearby points to be
+passed to a naive relative neighborhood graph calculation relative
+to the anchor point, $p$.
+
+% WIP!!!
+A fence face patch square, reprsented by a cluster of fence posts at the corners,
+is tested against a plane that passes through a point $q$ and has normal
+in the anchor point $p$
+of the fence face pathc
+
+Fence securitization is done by testing all fence post points in the frusturm that
 make the fence face patch, called \emph{fence posts}, are \emph{secured}.
 The vector in the direction of $(p-q)$ and the fence post point relative
 to the grid cell that $p$ lies in are tested against each other to make
@@ -250,6 +283,10 @@ After fence securitization and all nearby relevant points have been collected,
 a call to the naive relative neighborhood
 graph, on the collected points relative to the anchor point, is called
 in Algorithm \ref{alg:RNGPointNaive}.
+
+The expected size of the secured fence is finite, in grid cell units,
+and so the expected number of neighbors is almost surely bounded by
+a constant.
 
 
 \begin{algorithm}

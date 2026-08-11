@@ -118,6 +118,24 @@ int spot_check_Nd(int64_t n = 1000, int32_t D=2, int aux = 0) {
   //printf("#got: %i\n", res);
 }
 
+void print_points( int64_t n, int32_t dim, std::string *ofn = NULL, unsigned int seed = 0) {
+  FILE *fp = stdout;
+
+  RELATIVE_NEIGHBORHOOD_GRAPH rng;
+
+  if (seed > 0) { srand(seed); }
+
+  rng.m_verbose = g_verbose;
+
+  rng.poissonInit( n, dim );
+
+  if (ofn) { fp = fopen( ofn->c_str(), "w" ); }
+  rng.printP(fp);
+
+  if (ofn) { fclose(fp); }
+}
+
+
 void run_Nd( int64_t n, int32_t dim, std::string *ofn = NULL, unsigned int seed = 0) {
   FILE *fp = stdout;
 
@@ -135,11 +153,7 @@ void run_Nd( int64_t n, int32_t dim, std::string *ofn = NULL, unsigned int seed 
   if (ofn) { fp = fopen( ofn->c_str(), "w" ); }
   rng.printE(fp);
 
-  fflush(stdout);
-
   if (ofn) { fclose(fp); }
-
-  fflush(stdout);
 }
 
 int run_naive_Nd( int64_t n, int32_t dim, std::string *ofn = NULL, unsigned int seed = 0) {
@@ -187,7 +201,7 @@ static char long_options_descr[][128] = {
   "output edges to file",
   "input points from file",
 
-  "algorithm to use (default SPoIF)",
+  "algorithm to use (default SPoIF) (SPoIF|naive|print-point)",
 
   "verbose level",
   "help (this screen)",
@@ -260,6 +274,10 @@ int main(int argc, char **argv) {
   while ((ch = getopt_long(argc, argv, "hvV:S:n:d:co:i:A:", long_options, &opt_idx)) != 0) {
     if (ch<0) { break; }
     switch (ch) {
+      case ':':
+        printf("???? %i %c\n", optopt, optopt);
+        break;
+
       case 'h':
         print_help(stdout);
         return 0;
@@ -281,6 +299,7 @@ int main(int argc, char **argv) {
         break;
       case 'd':
         opt_d = atoi(optarg);
+        break;
 
       case 'c':
         opt_c = 1;
@@ -307,9 +326,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  //printf("%i %i %i\n", opt_n, opt_d, opt_S);
-
-
   if (opt_n <= 0) {
     fprintf(stderr, "provide number of points (-n)\n\n");
     print_help(stderr);
@@ -322,14 +338,16 @@ int main(int argc, char **argv) {
     exit(-1);
   }
 
+
   if (opt_c) {
     //---
   }
 
   g_verbose = opt_V;
 
-  if      (opt_A.size() == 0) { run_Nd( opt_n, opt_d, (opt_o.size() == 0) ? NULL: &opt_o, opt_S ); }
-  else if (opt_A == "naive")  { run_naive_Nd( opt_n, opt_d, (opt_o.size() == 0) ? NULL : &opt_o, opt_S ); }
+  if      (opt_A.size() == 0)         { run_Nd( opt_n, opt_d, (opt_o.size() == 0) ? NULL: &opt_o, opt_S ); }
+  else if (opt_A == "naive")          { run_naive_Nd( opt_n, opt_d, (opt_o.size() == 0) ? NULL : &opt_o, opt_S ); }
+  else if (opt_A == "print-point")    { print_points( opt_n, opt_d, (opt_o.size() == 0) ? NULL : &opt_o, opt_S ); }
 
   return 0;
 }

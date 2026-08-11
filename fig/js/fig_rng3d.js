@@ -264,14 +264,31 @@ var g_theta = 0;
 var g_dtheta = 0.01;
 
 function p_cmp(a,b) {
-  if (a[2] < b[2]) { return -1; }
-  if (a[2] > b[2]) { return  1; }
+  if (a[2] < b[2]) { return  1; }
+  if (a[2] > b[2]) { return -1; }
   return 0;
 }
 
+//WIP!!!
+//this is still pretty janky
+//this hack will work some (most?) of the time
+//  but if lines are close enough in z-order, the
+//  order from this won't be right...
+//
 function e_cmp(a,b) {
+  let apq = [ a[0], a[1] ];
+  let bpq = [ b[0], b[1] ];
+
+  if (a[0][2] > a[1][2]) { apq = [ a[1], a[0] ]; }
+  if (b[0][2] > b[1][2]) { bpq = [ b[1], b[0] ]; }
+
+  if (apq[0][2] < b[0][2]) { return  1; }
+  if (apq[1][2] > b[1][2]) { return -1; }
+
   return 0;
 }
+
+var g_debug = 0;
 
 function show_point(dt) {
 
@@ -285,19 +302,26 @@ function show_point(dt) {
   let pbg2js = g_fig_ctx.pbg2js;
   let ebg2js = g_fig_ctx.ebg2js;
 
+  let p_a = [];
 
   for (let i=0; i<P.length; i++) {
     let p3 = P[i];
     let u3 = njs.add([100,100,100], njs.mul(500, rodrigues( p3, [1,1,1], g_theta )));
-    p2js[i].p = u3;
-    pbg2js[i].p = u3;
+    //p2js[i].p = u3;
+    //pbg2js[i].p = u3;
+
+    p_a.push( u3 );
   }
 
-  p2js.sort( p_cmp );
-  pbg2js.sort( p_cmp );
+  //p2js.sort( p_cmp );
+  //pbg2js.sort( p_cmp );
 
-  for (let i=0; i<P.length; i++) {
-    let u3 = p2js[i].p;
+  p_a.sort( p_cmp );
+
+
+  for (let i=0; i<p_a.length; i++) {
+    let u3 = p_a[i];
+    //let u3 = p2js[i].p;
 
     let p2 = p2js[i].g;
     p2.position.x = u3[0];
@@ -309,19 +333,27 @@ function show_point(dt) {
 
   }
 
+  let e_a = [];
+
   for (let i=0; i<E.length; i++) {
     let u0 = njs.add([100,100,100], njs.mul(500, rodrigues( E[i][0], [1,1,1], g_theta)));
     let u1 = njs.add([100,100,100], njs.mul(500, rodrigues( E[i][1], [1,1,1], g_theta)));
-    e2js[i].l = [u0,u1];
-    ebg2js[i].l = [u0,u1];
+    //e2js[i].l = [u0,u1];
+    //ebg2js[i].l = [u0,u1];
+
+    e_a.push( [u0,u1] );
   }
 
-  e2js.sort( e_cmp );
-  ebg2js.sort( e_cmp );
+  //e2js.sort( e_cmp );
+  //ebg2js.sort( e_cmp );
 
-  for (let i=0; i<E.length; i++) {
-    let u0 = e2js[i].l[0];
-    let u1 = e2js[i].l[1];
+  e_a.sort( e_cmp );
+
+  for (let i=0; i<e_a.length; i++) {
+    let u0 = e_a[i][0];
+    let u1 = e_a[i][1];
+
+    //if (g_debug == 0) { console.log(u0,u1); }
 
     let e2 = e2js[i].g;
     let ebg2 = ebg2js[i].g;
@@ -337,13 +369,18 @@ function show_point(dt) {
     ebg2.right.y = u1[1];
   }
 
+  //g_debug = 1;
+
 
   g_theta += g_dtheta;
   if (g_theta > (2*Math.PI)) { g_theta -= 2*Math.PI; }
 
 
   two.update();
-  requestAnimationFrame( show_point );
+
+  //if (g_debug == 0) {
+    requestAnimationFrame( show_point );
+  //}
 
 }
 
@@ -366,8 +403,32 @@ function init() {
   let e2js = g_fig_ctx.e2js;
   let ebg2js = g_fig_ctx.ebg2js;
 
-  let _r = 3;
+  let _lw = 2;
+  for (let i=0; i<E.length; i++) {
+    let u0 = njs.mul(1000, E[i][0]);
+    let u1 = njs.mul(1000, E[i][1]);
+    let ebg2 = two.makeLine( u0[0], u0[1], u1[0], u1[1] );
+    let e2 = two.makeLine( u0[0], u0[1], u1[0], u1[1] );
 
+    e2.linewidth = _lw;
+    ebg2.linewidth = 4.25*_lw;
+
+    //e2.noStroke();
+    //ebg2.noStroke();
+
+    e2.stroke = "rgb(20,20,20)";
+    ebg2.stroke = "rgb(220,220,220)";
+    ebg2.stroke = "rgb(255,255,255)";
+
+    //e2.fill = "rgb(20,20,20)";
+    //ebg2.fill = "rgb(190,190,190)";
+
+    e2js.push({"g":e2, "l":[u0,u1]});
+    ebg2js.push({"g":ebg2, "l":[u0,u1]});
+  }
+
+
+  let _r = 3;
   for (let i=0; i<P.length; i++) {
 
     let u = njs.mul(1000, P[i]);
@@ -383,21 +444,7 @@ function init() {
     pbg2js.push({"g":pbg2, "p":u});
   }
 
-  let _lw = 2;
 
-  for (let i=0; i<E.length; i++) {
-    let u0 = njs.mul(1000, E[i][0]);
-    let u1 = njs.mul(1000, E[i][1]);
-    let e2 = two.makeLine( u0[0], u0[1], u1[0], u1[1] );
-    let ebg2 = two.makeLine( u0[0], u0[1], u1[0], u1[1] );
-
-    e2.linewidth = _lw;
-
-    ebg2.linewidth = 1.25*_lw;
-
-    e2js.push({"g":e2, "l":[u0,u1]});
-    ebg2js.push({"g":ebg2, "l":[u0,u1]});
-  }
 
   two.update();
   requestAnimationFrame( show_point );

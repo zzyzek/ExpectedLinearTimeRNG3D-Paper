@@ -72,12 +72,31 @@ All lemmas,  theorems and pseudo-code is fine but I think they should be there
 for completeness.
 The figures are the ones that will describe how the algorithm works.
 
-* example lune with edge, and excluded edge (2d) (`fig_lune`)
-* hero shot of 2d and 3d relative neighborhood graph
-* inadmissible region between points p,q, along with cut plane heuristic (2d) (`fig_lune_inadmissible`, `fig_lune_heuristic`)
+* (IP) example lune with edge, and excluded edge (2d) (`fig_lune`)
+* (IP) hero shot of 2d and 3d relative neighborhood graph (in progress, `fig_rng2d`, `fig_rng3d`)
+  - consider adding axies
+  - consider adding grid lines
+* (IP) graphic of fence and cluster? (`secure_fence` ?)
+* (IP) inadmissible region between points p,q, along with cut plane heuristic (2d) (`fig_lune_inadmissible`, `fig_lune_heuristic`)
   - also show an extra point, w, that will always be excluded because of q in lune(p,w)
   - label regions that mirror lemma 1
-* algorithm RNGp comic/graphic, detailing operation
+* (IP) sabotage point in extended region that precludes connection in-region (`fig_sabotage`)
+* (SK) securing fence graphic (see `secure_fence` sketch in notes directory)
+  - show cutting plane that secures cluster of posts
+  - shows cutting plane that partiall cleaves a cluster (and so doesn't secure
+* (SK) comic showing outline of math foundations (see `fence_sketch` in notes directory)
+  - cut plane, to
+  - convex hull, to
+  - fence, to
+  - extended fence, to
+  - (naive rng?)
+* (TK) graphic of growing fence, along grid lines (2d)
+  - color code growth
+  - show 'radius' of cell growth
+  - show list of neighbor points
+  - highlight anchor point
+  - maybe we can get away with showing a wire frame color coded region for the fence growth in 3d
+* (TK) algorithm RNGp comic/graphic, detailing operation
   - bin points
   - highlight single point
   - show growing fence
@@ -85,14 +104,6 @@ The figures are the ones that will describe how the algorithm works.
   - secure fence
   - extend fence
   - naive rng
-* securing fence graphic (see fence sketch in notes directory)
-  - show cutting plane that secures cluster of posts
-  - shows cutting plane that partiall cleaves a cluster (and so doesn't secure
-* comic showing outline of math foundations
-  - cut plane, to
-  - convex hull, to
-  - fence, to
-  - extended fence, to
-  - (naive rng?)
-* sabotage point in extended region that precludes connection in-region (`fig_sabotage`)
-* graphic of fence and cluster?
+* (TK) we really should have a 3d lune, maybe with a cut plane as the paper is talking about 3d rng
+
+key: `IP` in progress, `SK` sketch, `TK` to come

@@ -327,6 +327,14 @@ function show_point(dt) {
     p2.position.x = u3[0];
     p2.position.y = u3[1];
 
+
+    v = 255.0 * (((1-(i/p_a.length)) * 0.8) + 0.1);
+    v_s = v.toString();
+
+    p2.fill = "rgb(" + v_s + "," + v_s + "," + v_s + ")";
+    p2.stroke= "rgb(" + v_s + "," + v_s + "," + v_s + ")";
+
+
     let pbg2 = pbg2js[i].g;
     pbg2.position.x = u3[0];
     pbg2.position.y = u3[1];
@@ -362,6 +370,13 @@ function show_point(dt) {
     e2.left.y = u0[1];
     e2.right.x = u1[0];
     e2.right.y = u1[1];
+
+    v = 255.0 * (((1-(i/e_a.length)) * 0.8) + 0.1);
+    v_s = v.toString();
+
+    //console.log(v_s);
+
+    e2.stroke= "rgb(" + v_s + "," + v_s + "," + v_s + ")";
 
     ebg2.left.x = u0[0];
     ebg2.left.y = u0[1];

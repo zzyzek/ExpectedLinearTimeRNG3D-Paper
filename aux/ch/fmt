@@ -1,0 +1,6 @@
+#!/bin/bash
+
+node ch.js > foo.json
+jq -c .p foo.json  | sed 's/\[\|\]//g' | tr ',' ' ' > p.gp
+jq -c '.ch_p[]' foo.json | sed 's/\],\[/\n/g' | sed 's/\]\]/\n\n/g' | sed 's/\[\[//' | tr ',' ' ' > c.gp
+jq -c '.Q[]' foo.json  | sed 's/\[\|\]/\n/g' | tr ',' ' '> q.gp

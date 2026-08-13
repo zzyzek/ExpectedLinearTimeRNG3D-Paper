@@ -115,7 +115,6 @@ int spot_check_Nd(int64_t n = 1000, int32_t D=2, int aux = 0) {
   res = rng_cmp(rng, rng_slo);
 
   return res;
-  //printf("#got: %i\n", res);
 }
 
 void print_points( int64_t n, int32_t dim, std::string *ofn = NULL, unsigned int seed = 0) {
@@ -274,10 +273,6 @@ int main(int argc, char **argv) {
   while ((ch = getopt_long(argc, argv, "hvV:S:n:d:co:i:A:", long_options, &opt_idx)) != 0) {
     if (ch<0) { break; }
     switch (ch) {
-      case ':':
-        printf("???? %i %c\n", optopt, optopt);
-        break;
-
       case 'h':
         print_help(stdout);
         return 0;

@@ -1,9 +1,11 @@
 
 
 var njs = require("./numeric.js");
-
 var CH = require("convex-hull");
+var seedrandom = require("./seedrandom.js");
 
+//var _RND = Math.random;
+var _RND = seedrandom(1337);
 var _EPS = (1.0 / (1024.0*1024.0));
 
 function gp_pprint(P) {
@@ -13,23 +15,30 @@ function gp_pprint(P) {
 }
 
 function jsonf_pprint(P, name) {
-
   console.log("  \"" + name + "\":[");
-
   for (let i=0; i<P.length; i++) {
     console.log("    [", P[i][0], ",", P[i][1], ",", P[i][2], "]", (i < (P.length-1)) ? "," : "" );
   }
-
   console.log("  ]");
 }
 
+//-----
+//-----
+//-----
+
 var p = [0,0,0];
 
-let Qn = 40;
+let Qn = 30;
 let Q = [];
 for (let i=0; i<Qn; i++) {
-  Q.push( [ (Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5) ] );
+  //Q.push( [ (Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5) ] );
+  Q.push( [ (_RND() - 0.5), (_RND() - 0.5), (_RND() - 0.5) ] );
 }
+
+//-----
+//-----
+//-----
+
 
 console.log("{");
 console.log("  \"n\":", Qn, ",");

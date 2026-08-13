@@ -1,6 +1,12 @@
 #!/bin/bash
 
-node ch.js > foo.json
-jq -c .p foo.json  | sed 's/\[\|\]//g' | tr ',' ' ' > p.gp
-jq -c '.ch_p[]' foo.json | sed 's/\],\[/\n/g' | sed 's/\]\]/\n\n/g' | sed 's/\[\[//' | tr ',' ' ' > c.gp
-jq -c '.Q[]' foo.json  | sed 's/\[\|\]/\n/g' | tr ',' ' '> q.gp
+#
+# gnuplot:
+#  splot  'p.gp' with lp, 0, 'q.gp' with lp, 'c.gp' with lp
+#
+
+
+node ch.js > ch.json
+jq -c .p ch.json  | sed 's/\[\|\]//g' | tr ',' ' ' > p.gp
+jq -c '.ch_p[]' ch.json | sed 's/\],\[/\n/g' | sed 's/\]\]/\n\n/g' | sed 's/\[\[//' | tr ',' ' ' > c.gp
+jq -c '.Q[]' ch.json  | sed 's/\[\|\]/\n/g' | tr ',' ' '> q.gp

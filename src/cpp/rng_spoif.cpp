@@ -1145,10 +1145,38 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
 
       q_idir_oppo = m_idir_oppo[ _v2idir(Nqp, 2) ];
 
+      // fps_cache keeps a cache whether fence posts have been
+      // partitioned *for this point only*.
+      // There's overlap in clusters, so instead of seeing
+      // whether the fence post is partitioned, we can save the
+      // result and short circuit the computation if we find
+      // we've already calculated that fence post.
+      // Note that I've only used a positive value to short
+      // circuit, but this could be done for either case.
+      // fps_cache could be initialized with -1 and then
+      // checked to see if it's been cached.
+      //
+      // NEEDS TESTING to verify speedup is worth the hassle
+      //
       for (i=0; i<n_idir; i++) {
         for (j=0; j < 3; j++) { fps_cache[i][j] = 0; }
       }
 
+      // for each face (idir),
+      // for each patch/cluster within the face (cluster_idx),
+      // for each fence post within the patch (fpi mapped from cluster[fpci]):
+      //
+      //  * anchor point p, nearby point q
+      //  * frustum patch vector (fpv) to grid cell patch, rescaled
+      //    by current fence radius
+      //  * take dq=(q-win_center) to be from win center as fpv vectors have
+      //    0 origin
+      //  * take Nqp=(q-p)/|q-p| (normalized direction from p to q)
+      //  * test to make sure fence post (fpv) falls above plane that passes
+      //    through q in direction of (q-p) => sgn( Nqp . (fpv - dq) ) > 0
+      //  * test to make sure fence post (fpv) will continue to fall above
+      //    cutting plane => sgn( Nqp . fpv ) > 0
+      //
       for (idir=0; idir < n_idir; idir++) {
 
         if (q_idir_oppo == idir) { continue; }
@@ -1179,7 +1207,6 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
             s0 = (Nqp[0]*(fpv[0]-dq[0])) + (Nqp[1]*(fpv[1]-dq[1]));
             s1 = (Nqp[0]*fpv[0]) + (Nqp[1]*fpv[1]);
 
-            //if (s0 > 0) {
             if ((s0 > 0) && (s1 > 0)) {
               fps_cache[idir][fpi] = 1;
               n_cluster_secure++;

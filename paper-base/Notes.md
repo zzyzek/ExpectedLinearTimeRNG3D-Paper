@@ -62,7 +62,20 @@ Regardless, we have to:
   - try to add a test case that triggers this condition to make sure we've actually solved it (todo)
   - go through randomized tests to make sure there's no regression (todo)
 
+UPDATE: this has been added to the code. I've run validation successfully, so no regression happened.
+What really needs to be done is some test cases to trigger this issue to make sure it's resolved.
+
+* create a small instance, with bin size hard coded
+* place anchor point in some central cell
+* place $q$ points nearby
+  - focus on top face, place $q$ so that it cleaves the top face but doesn't secure it
+  - make sure algorithm notices that it cleaves but doesn't secure
+  - do this for all faces
+
+
 ---
+
+
 
 Figures
 ---

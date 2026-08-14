@@ -938,8 +938,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::RNGv_naive(int64_t p_idx, std::vector< int6
 int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
   int32_t res = 0;
 
-  int64_t n_cluster = 2,
-          cluster_size = 2,
+  int64_t n_fp_in_cluster = 2,
+          n_cluster_in_face = 2,
           n_idir = 4;
 
   int64_t i,j,
@@ -954,15 +954,13 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
   int32_t fencePostSecure[4][3];
   int64_t n_fp_secure= 0,
           n_fp_max = 4*3;
-  int32_t fps_cache[4][3];
-  int64_t n_cluster_secure = 0;
+  int32_t fpp_cache[4][3];
+  int64_t n_fp_partitioned = 0;
 
 
   int64_t cell_origin[2] = {0};
 
-  //int64_t ip[2];
   double win_center[2] = {0},
-         //Wp[2] = {0},
          p[2] = {0},
          q[2] = {0},
          dq[2] = {0},
@@ -983,10 +981,6 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
   int32_t _ns = 0,
           _ns_max = 0;
 
-  //int64_t _i, _j, _k;
-  //int _debug = 0;
-  //printf("# P[%i]: %f %f\n", (int)p_idx, m_P[2*p_idx], m_P[2*p_idx+1]);
-
   static std::vector< int64_t > sweep;
   static std::vector< int64_t > q_sched,
                                 saboteur_list;
@@ -999,12 +993,6 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
 
   p[0] = m_P[(m_dim*p_idx) + 0];
   p[1] = m_P[(m_dim*p_idx) + 1];
-
-  //Wp[0] = p[0] * m_grid_n;
-  //Wp[1] = p[1] * m_grid_n;
-
-  //ip[0] = (int64_t)floor( Wp[0] );
-  //ip[1] = (int64_t)floor( Wp[1] );
 
   for (idir=0; idir<n_idir; idir++) {
     for (fpi=0; fpi < m_fencePost_n; fpi++) {
@@ -1052,10 +1040,10 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
     // initial OOB fencepost marking
     //
     for (idir=0; idir < n_idir; idir++) {
-      for (cluster_idx=0; cluster_idx < n_cluster; cluster_idx++) {
+      for (cluster_idx=0; cluster_idx < n_cluster_in_face; cluster_idx++) {
 
-        n_cluster_secure = 0;
-        for (fpci=0; fpci < cluster_size; fpci++) {
+        n_fp_partitioned = 0;
+        for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
           fpi = m_fencePostCluster[cluster_idx][fpci];
 
           v[0] = 0.0;
@@ -1070,11 +1058,11 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
             v[1] = win_center[1] + (m_ds * ((2.0*ir)+1.0) * m_fencePost_v[idir][(m_dim*fpi) + 1]);
           }
 
-          if (oob(v)) { n_cluster_secure++; }
+          if (oob(v)) { n_fp_partitioned++; }
         }
 
-        if (n_cluster_secure == cluster_size) {
-          for (fpci=0; fpci < cluster_size; fpci++) {
+        if (n_fp_partitioned == n_fp_in_cluster) {
+          for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
             fpi = m_fencePostCluster[ cluster_idx ][ fpci ];
             if (fencePostSecure[ idir ][ fpi ] == 0) { n_fp_secure++; }
             fencePostSecure[ idir ][ fpi ] = 1;
@@ -1115,9 +1103,9 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
 
     // median is ir == 3, so collect lower than ir but otherwise
     // skip secure computation until we get to ir == 3
-    // (worth ~15% speed increase)
     //
-    if (ir < 2) { continue; }
+    //if (ir < 2) { continue; }
+    if (ir < (m_fpR_max_ir-1)) { continue; }
 
     if (m_profile_level > 0) { _prof_s( m_prof, "spoif2d_v.ir.secure"); }
 
@@ -1145,51 +1133,50 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
 
       q_idir_oppo = m_idir_oppo[ _v2idir(Nqp, 2) ];
 
-      // fps_cache keeps a cache whether fence posts have been
+      // fpp_cache (fence post partition cache) keeps
+      // a cache whether fence posts have been
       // partitioned *for this point only*.
       // There's overlap in clusters, so instead of seeing
       // whether the fence post is partitioned, we can save the
       // result and short circuit the computation if we find
-      // we've already calculated that fence post.
-      // Note that I've only used a positive value to short
-      // circuit, but this could be done for either case.
-      // fps_cache could be initialized with -1 and then
-      // checked to see if it's been cached.
-      //
-      // NEEDS TESTING to verify speedup is worth the hassle
+      // we've tested that fence post.
       //
       for (i=0; i<n_idir; i++) {
-        for (j=0; j < 3; j++) { fps_cache[i][j] = 0; }
+        for (j=0; j < 3; j++) { fpp_cache[i][j] = -1; }
       }
 
-      // for each face (idir),
-      // for each patch/cluster within the face (cluster_idx),
-      // for each fence post within the patch (fpi mapped from cluster[fpci]):
+      // we want to test each patch to make sure the patch
+      // both currently falls above the cut plane and will
+      // continue to fall above the cut plane as the fence grows.
       //
-      //  * anchor point p, nearby point q
-      //  * frustum patch vector (fpv) to grid cell patch, rescaled
-      //    by current fence radius
-      //  * take dq=(q-win_center) to be from win center as fpv vectors have
-      //    0 origin
-      //  * take Nqp=(q-p)/|q-p| (normalized direction from p to q)
-      //  * test to make sure fence post (fpv) falls above plane that passes
-      //    through q in direction of (q-p) => sgn( Nqp . (fpv - dq) ) > 0
-      //  * test to make sure fence post (fpv) will continue to fall above
-      //    cutting plane => sgn( Nqp . fpv ) > 0
+      // For each face (idir),
+      //   For each patch/cluster within the face (cluster_idx),
+      //     For each fence post within the patch (fpi mapped from cluster[fpci]):
+      //
+      //      * anchor point p, nearby point q
+      //      * frustum patch vector (fpv) to grid cell patch, rescaled
+      //        by current fence radius
+      //      * take dq=(q-win_center) to be from win center as fpv vectors have
+      //        0 origin
+      //      * take Nqp=(q-p)/|q-p| (normalized direction from p to q)
+      //      * test to make sure fence post (fpv) falls above plane that passes
+      //        through q in direction of (q-p) => sgn( Nqp . (fpv - dq) ) > 0
+      //      * test to make sure fence post (fpv) will continue to fall above
+      //        cutting plane => sgn( Nqp . fpv ) > 0
       //
       for (idir=0; idir < n_idir; idir++) {
 
         if (q_idir_oppo == idir) { continue; }
 
-        for (cluster_idx=0; cluster_idx < n_cluster; cluster_idx++) {
+        for (cluster_idx=0; cluster_idx < n_cluster_in_face; cluster_idx++) {
 
-          n_cluster_secure = 0;
+          n_fp_partitioned = 0;
 
-          for (fpci=0; fpci < cluster_size; fpci++) {
+          for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
             fpi = m_fencePostCluster[cluster_idx][fpci];
 
-            if (fps_cache[idir][fpi] == 1) {
-              n_cluster_secure++;
+            if (fpp_cache[idir][fpi] != -1) {
+              n_fp_partitioned++;
               continue;
             }
 
@@ -1204,17 +1191,24 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
               fpv[1] = (m_ds * ((2.0*((double)ir))+1.0) * m_fencePost_v[idir][(m_dim*fpi) + 1]);
             }
 
+            // s0 tests to see if the current fence post is above the cut plane
+            // s1 tests to see that the cut plane will continue to keep the
+            //   fence post partitioned as the fence grows
+            //
             s0 = (Nqp[0]*(fpv[0]-dq[0])) + (Nqp[1]*(fpv[1]-dq[1]));
             s1 = (Nqp[0]*fpv[0]) + (Nqp[1]*fpv[1]);
 
             if ((s0 > 0) && (s1 > 0)) {
-              fps_cache[idir][fpi] = 1;
-              n_cluster_secure++;
+              fpp_cache[idir][fpi] = 1;
+              n_fp_partitioned++;
+            }
+            else {
+              fpp_cache[idir][fpi] = 0;
             }
           }
 
-          if (n_cluster_secure == n_cluster) {
-            for (fpci=0; fpci < cluster_size; fpci++) {
+          if (n_fp_partitioned == n_fp_in_cluster) {
+            for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
               fpi = m_fencePostCluster[cluster_idx][fpci];
               if (fencePostSecure[idir][fpi] == 0) { n_fp_secure++; }
               fencePostSecure[idir][fpi] = 1;
@@ -1367,8 +1361,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d() {
 int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
   int32_t res = 0;
 
-  int64_t n_cluster = 4,
-          cluster_size = 4,
+  int64_t n_fp_in_cluster = 4,
+          n_cluster_in_face = 4,
           n_idir = -1;
 
   int64_t i,j,
@@ -1383,8 +1377,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
   int32_t fencePostSecure[6][9];
   int64_t n_fp_secure= 0,
           n_fp_max = 6*3*3;
-  int32_t fps_cache[6][9];
-  int64_t n_cluster_secure = 0;
+  int32_t fpp_cache[6][9];
+  int64_t n_fp_partitioned = 0;
 
   std::vector< int64_t > sweep;
 
@@ -1454,10 +1448,10 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
     grid_sweep_perim_3d(sweep, p, ir);
 
     for (idir=0; idir < n_idir; idir++) {
-      for (cluster_idx=0; cluster_idx < n_cluster; cluster_idx++) {
+      for (cluster_idx=0; cluster_idx < n_cluster_in_face; cluster_idx++) {
 
-        n_cluster_secure = 0;
-        for (fpci=0; fpci < cluster_size; fpci++) {
+        n_fp_partitioned = 0;
+        for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
           fpi = m_fencePostCluster[cluster_idx][fpci];
 
           v[0] = 0.0;
@@ -1475,11 +1469,11 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
             v[2] = win_center[2] + (m_ds * ((2.0*ir)+1.0) * m_fencePost_v[idir][(m_dim*fpi) + 2]);
           }
 
-          if (oob(v)) { n_cluster_secure++; }
+          if (oob(v)) { n_fp_partitioned++; }
         }
 
-        if (n_cluster_secure == cluster_size) {
-          for (fpci=0; fpci < cluster_size; fpci++) {
+        if (n_fp_partitioned == n_fp_in_cluster) {
+          for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
             fpi = m_fencePostCluster[ cluster_idx ][ fpci ];
             if (fencePostSecure[ idir ][ fpi ] == 0) { n_fp_secure++; }
             fencePostSecure[ idir ][ fpi ] = 1;
@@ -1517,7 +1511,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
     // skip secure computation until we get to ir == 3
     // (worth ~15% speed increase)
     //
-    if (ir < 2) { continue; }
+    //if (ir < 2) { continue; }
+    if (ir < (m_fpR_max_ir-1)) { continue; }
 
     for (sqi=0; sqi < (int64_t)q_sched.size(); sqi++) {
       q_idx = q_sched[sqi];
@@ -1541,26 +1536,28 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
 
       q_idir_oppo = m_idir_oppo[ _v2idir(Nqp, 3) ];
 
-      for (i=0; i<n_idir; i++) { for (j=0; j<9; j++) { fps_cache[i][j] = 0; } }
+      for (i=0; i<n_idir; i++) { for (j=0; j<9; j++) { fpp_cache[i][j] = -1; } }
 
       for (idir=0; idir < n_idir; idir++) {
 
         if (q_idir_oppo == idir) { continue; }
 
-        for (cluster_idx=0; cluster_idx < n_cluster; cluster_idx++) {
+        for (cluster_idx=0; cluster_idx < n_cluster_in_face; cluster_idx++) {
 
-          n_cluster_secure = 0;
+          n_fp_partitioned = 0;
 
-          for (fpci=0; fpci < cluster_size; fpci++) {
+          for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
             fpi = m_fencePostCluster[cluster_idx][fpci];
 
-            if (fps_cache[idir][fpi] == 1) {
-              n_cluster_secure++;
+            if (fpp_cache[idir][fpi] != -1) {
+              n_fp_partitioned++;
               continue;
             }
 
             fpv[0] = 0; fpv[1] = 0; fpv[2] = 0;
 
+            // we've cached fence post vectors when ir < m_fpR_max_ir
+            //
             if (ir <= m_fpR_max_ir) {
               fpv[0] = m_fpR_v[ir][idir][(m_dim*fpi) + 0];
               fpv[1] = m_fpR_v[ir][idir][(m_dim*fpi) + 1];
@@ -1575,13 +1572,16 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
             s0 = (Nqp[0]*(fpv[0]-dq[0])) + (Nqp[1]*(fpv[1]-dq[1])) + (Nqp[2]*(fpv[2]-dq[2]));
             s1 = (Nqp[0]*fpv[0]) + (Nqp[1]*fpv[1]) + (Nqp[2]*fpv[2]);
             if ((s0 > 0) && (s1 > 0)) {
-              fps_cache[idir][fpi] = 1;
-              n_cluster_secure++;
+              fpp_cache[idir][fpi] = 1;
+              n_fp_partitioned++;
+            }
+            else {
+              fpp_cache[idir][fpi] = 0;
             }
           }
 
-          if (n_cluster_secure == n_cluster) {
-            for (fpci=0; fpci < cluster_size; fpci++) {
+          if (n_fp_partitioned == n_fp_in_cluster) {
+            for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
               fpi = m_fencePostCluster[cluster_idx][fpci];
               if (fencePostSecure[idir][fpi] == 0) { n_fp_secure++; }
               fencePostSecure[idir][fpi] = 1;
@@ -1663,6 +1663,34 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d() {
   //   3 4 5
   //   0 1 2
   //
+  //          4      7 2
+  //          ^     /
+  //          |   (+y)
+  //        (+z) /
+  //          | /
+  //  1 -(-x)-.-(+x)-> 0
+  //         /|
+  //        / (-z)
+  //     (-y) |
+  //      /   5
+  //     3         2 5 8 (+z)
+  //             1 4 7
+  //           0 3 6
+  //
+  //              6 7 8 (+y)
+  //     8        3 4 5        8
+  //   7 5        0 1 2      7 5
+  // 6 4 2                 6 4 2 (+x)
+  // 3 1    6 7 8          3 1
+  // 0      3 4 5          0
+  //        0 1 2
+  //
+  //               2 5 8
+  //             1 4 7
+  //           0 3 6
+  //
+  //
+  //
   // looking at the face, from the outside in, if
   // we were to rotate around the cube in a 'natural'
   // way.
@@ -1692,6 +1720,20 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d() {
       { 1,-1,-1 }, { 1,  0,-1 }, { 1, 1,-1 } }
   };
 
+
+  // fence post cluster template (fpc_template)
+  // each entry list is indices into fence post array
+  //
+  // 2: 6 7  3: 7 9
+  //    3 4     4 5
+  //
+  // 0: 3 4  1: 4 5
+  //    0 1     1 2
+  //
+  // so, for example, the first patch consists of indices 0,1,3,4,
+  // which reference (1,-1,-1), (1,0,-1), (1,-1,0), (1,0,0)
+  // fence post vectors from above (fpv_template)
+  //
   int64_t _fpc_template[4][4] = { {0,1,3,4}, {1,2,4,5}, {3,4,6,7}, {4,5,7,8} };
 
   n_idir = m_dim*2;
@@ -1704,7 +1746,7 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d() {
     }
   }
 
-  // cache fencepost calculatiosn
+  // pre-compute fence post vectors
   //
   for (ir=0; ir <= m_fpR_max_ir; ir++) {
     for (idir=0; idir < n_idir; idir++) {
@@ -1712,7 +1754,7 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d() {
 
         fpv[0] = m_ds*((2.0*((double)ir)) + 1.0) * m_fencePost_v[idir][(m_dim*fpi) + 0];
         fpv[1] = m_ds*((2.0*((double)ir)) + 1.0) * m_fencePost_v[idir][(m_dim*fpi) + 1];
-        fpv[1] = m_ds*((2.0*((double)ir)) + 1.0) * m_fencePost_v[idir][(m_dim*fpi) + 2];
+        fpv[2] = m_ds*((2.0*((double)ir)) + 1.0) * m_fencePost_v[idir][(m_dim*fpi) + 2];
 
         m_fpR_v[ir][idir][(m_dim*fpi) + 0] = fpv[0];
         m_fpR_v[ir][idir][(m_dim*fpi) + 1] = fpv[1];

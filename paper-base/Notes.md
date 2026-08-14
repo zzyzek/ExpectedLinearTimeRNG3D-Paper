@@ -5,6 +5,25 @@ To get something started, I'm using the template provided by [information proces
 
 ---
 
+
+###### 2026-08-14
+
+We're settling on terminology:
+
+* *anchor point* : point, $p$, doing the relative neighborhood graph calculation
+* *cut plane* : (*cutting plane*, *partitioning plane*) plane defined by anchor point, $p$, and some nearby point $q$
+* *partition* : separates a point (e.g. fence post) from some other point (e.g. anchor point)
+  (deprecated terminology: *cleave*)
+* *fence* : bounding, grid aligned cube
+* *fence face patch*: (*face patch*, *patch*) small 2d portion on a fence face,
+  in this context it'll be square but in a broader context could be any geometry
+* *secure*: (*secure the fence*, *fence is secured*, *patch is secured*, *secured patch*)
+  indicates that a cutting plane partitions anchor point from the appropriate target
+  (patch, face, fence)
+* *fence post*: (4) point corner of a fence patch. Used as proxies that when
+  tested for partioned or securitization, under appropriate conditions will indicate 
+  whole patch is secured
+
 ###### 2026-08-03
 
 I think the algorithm pseudo code should go before the proofs.
@@ -103,6 +122,12 @@ The figures are the ones that will describe how the algorithm works.
   - fence, to
   - extended fence, to
   - (naive rng?)
+* (TK) 2d graphic of fence, win center, anchor point, q0 and q1 where
+  (p,q0) cutting plane secures two fence posts and (p,q1) partitions fenceposts
+  but does not secure them
+  - show extended fence with 'ghost' posts, where fence posts would be after fence is
+    extended, to show that the cut plane keeps the posts secured whereas the other one
+    only partitions the nearest fence posts and doesn't partition the ghost points further on
 * (TK) graphic of growing fence, along grid lines (2d)
   - color code growth
   - show 'radius' of cell growth

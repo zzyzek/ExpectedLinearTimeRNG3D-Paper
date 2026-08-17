@@ -13,7 +13,7 @@ var p0 = njs.sub(
           ds );
 var Q = [];
 Q.push( njs.sub( p0, [ ds[0], ds[1]/2 ] ) );
-Q.push( njs.add( p0, [ 0, 3*ds[1] ] ) );
+Q.push( njs.add( p0, [-0.5*ds[0], 1.5*ds[1] ] ) );
 
 var _c = grid_cell_size;
 
@@ -41,6 +41,16 @@ for (let i=0; i<=grid_n; i++) {
   console.log("##", 0, i/grid_n);
   console.log("##", 1, i/grid_n);
   console.log("##\n#\n");
+}
+
+//---
+//---
+//---
+
+for (let i=0; i<=(2*grid_n); i++) {
+  for (let j=0; j<=(2*grid_n); j++) {
+    console.log("###", i/(2*grid_n), j/(2*grid_n), "\n###\n###\n");
+  }
 }
 
 

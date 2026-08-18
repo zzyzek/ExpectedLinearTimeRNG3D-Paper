@@ -399,8 +399,42 @@ function show_point(dt) {
 
 }
 
-function tetra() {
+function cone(v, xy, l) {
+  let two = g_fig_ctx.two;
+
+  let Nv = njs.mul( 1/njs.norm2(v), v);
+  let theta = Math.acos(Nv[2]);
+
+  let h = l*Nv[2];
+
+  let rho = Math.atan2(v[1], v[0]);
+
+  let _e = two.makeEllipse( xy[0], xy[1], l, h );
+  _e.noStroke();
+  _e.fill = "rgb(200,120,100)";
+  _e.rotation = rho;
 }
+
+
+/*
+var g_init =0;
+var g_theta = 0;
+var V = [ Math.random(), Math.random(), Math.random() ];
+function _cone_anim_test() {
+  let two = g_fig_ctx.two;
+
+  two.clear();
+
+  let v = rodrigues(V, [1,1,1], g_theta);
+  g_theta += 1/32;
+
+  cone(v, [100,100], 30);
+
+  two.update();
+
+  requestAnimationFrame(floop);
+}
+*/
 
 //WIP!!!
 function init() {
@@ -413,6 +447,14 @@ function init() {
   two.appendTo(ele);
 
   show_frame();
+
+  //requestAnimationFrame(_cone_anim_test);
+
+  //let v = [ Math.random(), Math.random(), Math.random() ];
+  //cone(v, [100,100], 30);
+  two.update();
+  return;
+
 
   let P = g_fig_ctx.P;
   let p2js = g_fig_ctx.p2js;

@@ -1110,7 +1110,7 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_2d_v(int64_t p_idx) {
     if (m_profile_level > 0) { _prof_s( m_prof, "spoif2d_v.ir.secure"); }
 
     // for each neighbor, q, within the current fence,
-    // take the normal plane centered at p with normal (q-p)/|q-p|
+    // take the plane that passes through q with normal (q-p)/|q-p|
     // to see if it secures a cluster of fence posts on the
     // current fence edge.
     // If all fence posts secured, we can do a RNG calculation.
@@ -1384,9 +1384,7 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
 
   int64_t cell_origin[3] = {0};
 
-  //int64_t ip[3];
   double win_center[3] = {0},
-         //Wp[3] = {0},
          p[3] = {0},
          q[3] = {0},
          dq[3] = {0},
@@ -1407,8 +1405,6 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
   int32_t _ns = 0,
           _ns_max = 0;
 
-  //int64_t _i, _j, _k;
-
   n_idir = 2*m_dim;
 
   std::vector< int64_t > q_sched,
@@ -1420,14 +1416,6 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
   p[0] = m_P[(m_dim*p_idx) + 0];
   p[1] = m_P[(m_dim*p_idx) + 1];
   p[2] = m_P[(m_dim*p_idx) + 2];
-
-  //Wp[0] = p[0] * m_grid_n;
-  //Wp[1] = p[1] * m_grid_n;
-  //Wp[2] = p[2] * m_grid_n;
-
-  //ip[0] = (int64_t)floor( Wp[0] );
-  //ip[1] = (int64_t)floor( Wp[1] );
-  //ip[2] = (int64_t)floor( Wp[2] );
 
   for (idir=0; idir<n_idir; idir++) {
     for (fpi=0; fpi < m_fencePost_n; fpi++) {
@@ -1444,9 +1432,32 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
   win_center[1] = (m_ds/2.0) + (m_ds*cell_origin[1]);
   win_center[2] = (m_ds/2.0) + (m_ds*cell_origin[2]);
 
+  // For each grid integer radius (ir), centered at p (m_P[p_idx]),
+  // enumerate the grid cells on the ir shell and collect all vertices
+  // in them.
+  //
+  // If the grid shell side is out of bounds, mark the fence posts
+  // as secured on that side.
+  // Otherwise, go through all collected vertices to see if they
+  // secure the posts within the fence.
+  //
+  // When the fence is secured, collect saboteurs after this
+  // main loop to do the naive relative neighborhood graph
+  // connection calculation for the anchor point p_idx.
+  //
+  // Initial grid radius is taken to be ir=3, collecting neighbor
+  // points as we go, as likelyhood is low that anything below
+  // ir=3 will secure the fence (pre-processing batch speedup).
+  //
   for (ir=0; ir < m_grid_n; ir++) {
+
+    // collect points from grid in a cube shell ir distance away from the
+    // cell containing p
+    //
     grid_sweep_perim_3d(sweep, p, ir);
 
+    // initial OOB fencepost marking
+    //
     for (idir=0; idir < n_idir; idir++) {
       for (cluster_idx=0; cluster_idx < n_cluster_in_face; cluster_idx++) {
 
@@ -1472,6 +1483,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
           if (oob(v)) { n_fp_partitioned++; }
         }
 
+        // if the cluster/patch falls completely out of bounds, mark it as secured
+        //
         if (n_fp_partitioned == n_fp_in_cluster) {
           for (fpci=0; fpci < n_fp_in_cluster; fpci++) {
             fpi = m_fencePostCluster[ cluster_idx ][ fpci ];
@@ -1484,6 +1497,11 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
     }
 
 
+    // collect all swept nearby points and append them to the list for processing
+    // (q_sched).
+    // save the max_dist so we know how much to scale the secured fence to include
+    // saboteurs.
+    //
     for (path_idx=0; path_idx < (int64_t)sweep.size(); path_idx += m_dim) {
       ixyz[0] = sweep[ path_idx + 0 ];
       ixyz[1] = sweep[ path_idx + 1 ];
@@ -1505,15 +1523,23 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
       }
     }
 
+    // we've secured the fence (from OOB), short circuite.
+    // We needed to add the points to q_sched and record max_dist,
+    // which is why we do this here instead of right after OOB test.
+    //
     if (n_fp_secure == n_fp_max) { break; }
 
     // median is ir == 3, so collect lower than ir but otherwise
     // skip secure computation until we get to ir == 3
-    // (worth ~15% speed increase)
     //
-    //if (ir < 2) { continue; }
     if (ir < (m_fpR_max_ir-1)) { continue; }
 
+    // for each neighbor, q, within the current fence,
+    // take the plane that passes through q with normal (q-p)/|q-p|
+    // to see if it secures a cluster of fence posts on the
+    // current fence edge.
+    // If all fence posts secured, we can do a RNG calculation.
+    //
     for (sqi=0; sqi < (int64_t)q_sched.size(); sqi++) {
       q_idx = q_sched[sqi];
 
@@ -1536,8 +1562,39 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
 
       q_idir_oppo = m_idir_oppo[ _v2idir(Nqp, 3) ];
 
-      for (i=0; i<n_idir; i++) { for (j=0; j<9; j++) { fpp_cache[i][j] = -1; } }
+      // fpp_cache (fence post partition cache) keeps
+      // a cache whether fence posts have been
+      // partitioned *for this point only*.
+      // There's overlap in clusters, so instead of seeing
+      // whether the fence post is partitioned, we can save the
+      // result and short circuit the computation if we find
+      // we've tested that fence post.
+      //
+      for (i=0; i<n_idir; i++) {
+        for (j=0; j<9; j++) {
+          fpp_cache[i][j] = -1;
+        }
+      }
 
+      // we want to test each patch to make sure the patch
+      // both currently falls above the cut plane and will
+      // continue to fall above the cut plane as the fence grows.
+      //
+      // For each face (idir),
+      //   For each patch/cluster within the face (cluster_idx),
+      //     For each fence post within the patch (fpi mapped from cluster[fpci]):
+      //
+      //      * anchor point p, nearby point q
+      //      * frustum patch vector (fpv) to grid cell patch, rescaled
+      //        by current fence radius
+      //      * take dq=(q-win_center) to be from win center as fpv vectors have
+      //        0 origin
+      //      * take Nqp=(q-p)/|q-p| (normalized direction from p to q)
+      //      * test to make sure fence post (fpv) falls above plane that passes
+      //        through q in direction of (q-p) => sgn( Nqp . (fpv - dq) ) > 0
+      //      * test to make sure fence post (fpv) will continue to fall above
+      //        cutting plane => sgn( Nqp . fpv ) > 0
+      //
       for (idir=0; idir < n_idir; idir++) {
 
         if (q_idir_oppo == idir) { continue; }
@@ -1569,6 +1626,10 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
               fpv[2] = (m_ds * ((2.0*((double)ir))+1.0) * m_fencePost_v[idir][(m_dim*fpi) + 2]);
             }
 
+            // s0 tests to see if the current fence post is above the cut plane
+            // s1 tests to see that the cut plane will continue to keep the
+            //   fence post partitioned as the fence grows
+            //
             s0 = (Nqp[0]*(fpv[0]-dq[0])) + (Nqp[1]*(fpv[1]-dq[1])) + (Nqp[2]*(fpv[2]-dq[2]));
             s1 = (Nqp[0]*fpv[0]) + (Nqp[1]*fpv[1]) + (Nqp[2]*fpv[2]);
             if ((s0 > 0) && (s1 > 0)) {
@@ -1610,7 +1671,8 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
     if (_ns == _ns_max) { break; }
   }
 
-  // create saboteur list to make sure that if there's a phantom edge
+  // Fence has been secured.
+  // Now create saboteur list to make sure that if there's a phantom edge
   // within the fence it'll be sabotaged from a point in the saboteur list.
   //
   max_ir = (int64_t)ceil( (max_dist / m_ds) + 0.5 );
@@ -1634,6 +1696,12 @@ int32_t RELATIVE_NEIGHBORHOOD_GRAPH::SPoIF_3d_v(int64_t p_idx) {
 
   }
 
+  // Naive relative nieghborhood graph calculation with
+  // some speedups to only consider q_sched points for connections
+  // and saboteur_list points for sabotaging the connection.
+  //
+  // RNGv_fence will add edges to m_Ve_map, the edge structure.
+  //
   res = RNGv_fence(p_idx, q_sched, saboteur_list);
   return res;
 }

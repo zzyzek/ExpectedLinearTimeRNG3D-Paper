@@ -1,6 +1,9 @@
 Notes
 ===
 
+Title should be something more like "Expected Linear Time Algorithm for Computing
+Relative Neighborhood Graph for Uniform Random Points in a 3D Unit Cube."
+
 To get something started, I'm using the template provided by [information processing letters (elsevier)](https://www.sciencedirect.com/journal/information-processing-letters/publish/guide-for-authors#writing-and-formatting-latex)
 
 ---
@@ -144,4 +147,8 @@ The figures are the ones that will describe how the algorithm works.
   - naive rng
 * (TK) we really should have a 3d lune, maybe with a cut plane as the paper is talking about 3d rng
 
-key: `IP` in progress, `SK` sketch, `TK` to come
+| Code | Description |
+|---|---|
+| `IP` | in progress |
+| `SK` | sketch |
+| `TK` | to come |

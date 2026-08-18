@@ -293,6 +293,14 @@ var g_debug = 0;
 function project_cone(v, xy, l) {
   let two = g_fig_ctx.two;
 
+  let _co_f = "rgb(150,60,50)";
+  let _co_s = "rgb(150,60,50)";
+  let _lw = 2;
+
+  _co_f = "rgb(200,120,100)";
+  _co_s = "rgb(200,120,100)";
+
+
   let Nv = njs.mul( 1/njs.norm2(v), v);
   let theta = Math.acos(Nv[2]);
 
@@ -301,59 +309,38 @@ function project_cone(v, xy, l) {
   let rho = Math.atan2(v[1], v[0]) + (Math.PI/2);
 
   let _e = two.makeEllipse( xy[0], xy[1], l, h );
-  _e.noStroke();
-  _e.fill = "rgb(200,120,100)";
+  _e.linewidth = _lw;
+  _e.stroke = _co_s;
+  _e.fill = _co_f;
   _e.rotation = rho;
+  
+  //let _c = Math.cos(rho - (Math.PI/2));
+  //let _s = Math.sin(rho - (Math.PI/2));
 
-  let p_tri = [
-    [xy[0]+0, xy[1]-2*l*Math.sin(theta)],
-    //[xy[0]+0, xy[1]-2*l*Math.sin(g_debug_theta)],
-    [xy[0]+l, xy[1]+0],
-    [xy[0]-l, xy[1]+0],
-  ];
+  let _c = Math.cos(-rho);
+  let _s = Math.sin(-rho);
 
-  let com = [2*l/3,-2*l*Math.sin(theta)/3];
+  let p_tri = njs.dot( 
+    [
+      [ 0, -2*l*Math.sin(theta)],
+      [ l, 0],
+      [-l, 0] ],
+    [ [_c, -_s], [_s, _c] ]
+  );
+
   for (let i=0; i<p_tri.length; i++) {
-    p_tri[i][0] += com[0];
-    p_tri[i][1] += com[1];
+    p_tri[i][0] += xy[0];
+    p_tri[i][1] += xy[1];
   }
 
   let a_tri = makeTwoAnchor(p_tri);
 
+  let _path2 = two.makePath(a_tri);
+  _path2.fill = _co_f;
+  _path2.stroke = _co_s;
+  _path2.linewidth = _lw;
+  _path2.join = "round";
 
-
-
-  //let _s = two.makeRectangle(xy[0], xy[1], 2*l, 2*l);
-  let _s = two.makePath(a_tri);
-  //_s.position.x = xy[0] - com[0];
-  //_s.position.y = xy[1] - com[1];
-  _s.rotation = rho;
-  _s.fill = "rgb(150,60,50)";
-  _s.noStroke();
-
-}
-
-var g_debug_theta = 0;
-function apc() {
-  g_debug_theta += 1/32;
-
-  let two = g_fig_ctx.two;
-  two.clear();
-
-  let p = [100,100,100];
-  let q = [150,150,150];
-
-  let dqp = njs.sub(q,p);
-
-  let v = rodrigues(dqp, [1,0.25,0.5], 0);
-
-  let qq = njs.add(p, v);
-
-  project_arrow(p,qq, 10);
-
-  two.update();
-
-  requestAnimationFrame(apc);
 }
 
 function project_arrow(p,q,l) {
@@ -430,7 +417,6 @@ function init() {
 
   project_arrow(p,q, 10);
   //requestAnimationFrame(_anim_test);
-  //requestAnimationFrame(apc);
 
   //requestAnimationFrame(_cone_anim_test);
 

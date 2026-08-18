@@ -290,116 +290,7 @@ function e_cmp(a,b) {
 
 var g_debug = 0;
 
-function show_point(dt) {
-
-  let two = g_fig_ctx.two;
-  let P = g_fig_ctx.P;
-  let E = g_fig_ctx.E;
-
-  let p2js = g_fig_ctx.p2js;
-  let e2js = g_fig_ctx.e2js;
-
-  let pbg2js = g_fig_ctx.pbg2js;
-  let ebg2js = g_fig_ctx.ebg2js;
-
-  let p_a = [];
-
-  for (let i=0; i<P.length; i++) {
-    let p3 = P[i];
-    let u3 = njs.add([100,100,100], njs.mul(500, rodrigues( p3, [1,1,1], g_theta )));
-    //p2js[i].p = u3;
-    //pbg2js[i].p = u3;
-
-    p_a.push( u3 );
-  }
-
-  //p2js.sort( p_cmp );
-  //pbg2js.sort( p_cmp );
-
-  p_a.sort( p_cmp );
-
-
-  for (let i=0; i<p_a.length; i++) {
-    let u3 = p_a[i];
-    //let u3 = p2js[i].p;
-
-    let p2 = p2js[i].g;
-    p2.position.x = u3[0];
-    p2.position.y = u3[1];
-
-
-    v = 255.0 * (((1-(i/p_a.length)) * 0.8) + 0.1);
-    v_s = v.toString();
-
-    p2.fill = "rgb(" + v_s + "," + v_s + "," + v_s + ")";
-    p2.stroke= "rgb(" + v_s + "," + v_s + "," + v_s + ")";
-
-
-    let pbg2 = pbg2js[i].g;
-    pbg2.position.x = u3[0];
-    pbg2.position.y = u3[1];
-
-  }
-
-  let e_a = [];
-
-  for (let i=0; i<E.length; i++) {
-    let u0 = njs.add([100,100,100], njs.mul(500, rodrigues( E[i][0], [1,1,1], g_theta)));
-    let u1 = njs.add([100,100,100], njs.mul(500, rodrigues( E[i][1], [1,1,1], g_theta)));
-    //e2js[i].l = [u0,u1];
-    //ebg2js[i].l = [u0,u1];
-
-    e_a.push( [u0,u1] );
-  }
-
-  //e2js.sort( e_cmp );
-  //ebg2js.sort( e_cmp );
-
-  e_a.sort( e_cmp );
-
-  for (let i=0; i<e_a.length; i++) {
-    let u0 = e_a[i][0];
-    let u1 = e_a[i][1];
-
-    //if (g_debug == 0) { console.log(u0,u1); }
-
-    let e2 = e2js[i].g;
-    let ebg2 = ebg2js[i].g;
-
-    e2.left.x = u0[0];
-    e2.left.y = u0[1];
-    e2.right.x = u1[0];
-    e2.right.y = u1[1];
-
-    v = 255.0 * (((1-(i/e_a.length)) * 0.8) + 0.1);
-    v_s = v.toString();
-
-    //console.log(v_s);
-
-    e2.stroke= "rgb(" + v_s + "," + v_s + "," + v_s + ")";
-
-    ebg2.left.x = u0[0];
-    ebg2.left.y = u0[1];
-    ebg2.right.x = u1[0];
-    ebg2.right.y = u1[1];
-  }
-
-  //g_debug = 1;
-
-
-  g_theta += g_dtheta;
-  if (g_theta > (2*Math.PI)) { g_theta -= 2*Math.PI; }
-
-
-  two.update();
-
-  //if (g_debug == 0) {
-    requestAnimationFrame( show_point );
-  //}
-
-}
-
-function cone(v, xy, l) {
+function project_cone(v, xy, l) {
   let two = g_fig_ctx.two;
 
   let Nv = njs.mul( 1/njs.norm2(v), v);
@@ -407,18 +298,82 @@ function cone(v, xy, l) {
 
   let h = l*Nv[2];
 
-  let rho = Math.atan2(v[1], v[0]);
+  let rho = Math.atan2(v[1], v[0]) + (Math.PI/2);
 
   let _e = two.makeEllipse( xy[0], xy[1], l, h );
   _e.noStroke();
   _e.fill = "rgb(200,120,100)";
   _e.rotation = rho;
+
+  let p_tri = [
+    [xy[0]+0, xy[1]-2*l*Math.sin(theta)],
+    //[xy[0]+0, xy[1]-2*l*Math.sin(g_debug_theta)],
+    [xy[0]+l, xy[1]+0],
+    [xy[0]-l, xy[1]+0],
+  ];
+
+  let com = [2*l/3,-2*l*Math.sin(theta)/3];
+  for (let i=0; i<p_tri.length; i++) {
+    p_tri[i][0] += com[0];
+    p_tri[i][1] += com[1];
+  }
+
+  let a_tri = makeTwoAnchor(p_tri);
+
+
+
+
+  //let _s = two.makeRectangle(xy[0], xy[1], 2*l, 2*l);
+  let _s = two.makePath(a_tri);
+  //_s.position.x = xy[0] - com[0];
+  //_s.position.y = xy[1] - com[1];
+  _s.rotation = rho;
+  _s.fill = "rgb(150,60,50)";
+  _s.noStroke();
+
 }
 
+var g_debug_theta = 0;
+function apc() {
+  g_debug_theta += 1/32;
+
+  let two = g_fig_ctx.two;
+  two.clear();
+
+  let p = [100,100,100];
+  let q = [150,150,150];
+
+  let dqp = njs.sub(q,p);
+
+  let v = rodrigues(dqp, [1,0.25,0.5], 0);
+
+  let qq = njs.add(p, v);
+
+  project_arrow(p,qq, 10);
+
+  two.update();
+
+  requestAnimationFrame(apc);
+}
+
+function project_arrow(p,q,l) {
+  let two = g_fig_ctx.two;
+
+  let dqp = njs.sub(q,p);
+  let Nqp = njs.mul( 1/njs.norm2(dqp), dqp);
+
+
+  let _l = two.makeLine(p[0], p[1], q[0], q[1]);
+  _l.fill = "rgb(100,200,120)";
+  
+  project_cone(Nqp, q, l);
+
+}
+
+var g_theta = 0;
 
 /*
 var g_init =0;
-var g_theta = 0;
 var V = [ Math.random(), Math.random(), Math.random() ];
 function _cone_anim_test() {
   let two = g_fig_ctx.two;
@@ -428,13 +383,35 @@ function _cone_anim_test() {
   let v = rodrigues(V, [1,1,1], g_theta);
   g_theta += 1/32;
 
-  cone(v, [100,100], 30);
+  project_cone(v, [100,100], 30);
 
   two.update();
 
   requestAnimationFrame(floop);
 }
 */
+
+function _anim_test() {
+  let two = g_fig_ctx.two;
+
+  two.clear();
+
+  let p = [100,100,100];
+  let q = [150,150,150];
+
+  let dqp = njs.sub(q,p);
+
+  let v = rodrigues(dqp, [1,0.25,0.5], g_theta);
+  g_theta += 1/32;
+
+  let qq = njs.add(p, v);
+
+  project_arrow(p,qq, 10);
+
+  two.update();
+
+  requestAnimationFrame(_anim_test);
+}
 
 //WIP!!!
 function init() {
@@ -448,10 +425,17 @@ function init() {
 
   show_frame();
 
+  let p = [100,100,100];
+  let q = [150,150,150];
+
+  project_arrow(p,q, 10);
+  //requestAnimationFrame(_anim_test);
+  //requestAnimationFrame(apc);
+
   //requestAnimationFrame(_cone_anim_test);
 
   //let v = [ Math.random(), Math.random(), Math.random() ];
-  //cone(v, [100,100], 30);
+  //project_cone(v, [100,100], 30);
   two.update();
   return;
 

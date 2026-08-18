@@ -433,6 +433,11 @@ function init() {
   let p = njs.add( njs.mul(C, CH.p), center );
   let q = njs.add( njs.mul(C, CH.Q_ch_v[0][1]), center );
 
+  // completely wrong way to do it,
+  // we need to find a vector u, s.t. Nqp . (u - q) = 0
+  // we can take u[0], u[1] to be known and solve for u[2],
+  // then do a rodrigues to get the other one...
+  //
   let dqp = njs.sub( q, p );
   let a0 = rodrigues( dqp, [0,1,0], Math.PI/2 );
   let a1 = rodrigues( dqp, [1,0,0], Math.PI/2 );

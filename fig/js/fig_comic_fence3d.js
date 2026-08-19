@@ -406,18 +406,98 @@ function _anim_test() {
   requestAnimationFrame(_anim_test);
 }
 
-//WIP!!!
 function init() {
   let two = g_fig_ctx.two;
-
-  let C = 400;
-
   var ele = document.getElementById("ui_canvas");
   two.appendTo(ele);
 
   show_frame();
 
-  let center = [300, 300, 100];
+  fig_b(300, [300,300,100]);
+
+  two.update();
+}
+
+function fig_b(scale, center) {
+  let two = g_fig_ctx.two;
+
+  let p = njs.add( njs.mul(scale, CH.p), center );
+
+  let qsrt = [], qsrt_bp = {};
+  for (let i=0; i<CH.Q.length; i++) { qsrt.push( { "q": CH.Q[i], "idx": i } ); }
+  qsrt.sort( function(a,b) { return (a.q[2] < b.q[2]) ? -1 : ((a.q[2] > b.q[2]) ? 1 : 0); } );
+  for (let i=0; i<qsrt.length; i++) { qsrt_bp[ qsrt[i].idx ] = i; }
+
+  let q_ch_map = {};
+  for (let i=0; i<CH.Q_ch_idx.length; i++) {
+    q_ch_map[ CH.Q_ch_idx[i] ] = 1;
+  }
+
+  for (let i=0; i<CH.Q.length; i++) {
+    let _qT = njs.add( njs.mul(scale, CH.Q[i]), center );
+
+    let _c = two.makeCircle( _qT[0], _qT[1], 4 );
+
+    let s_idx = qsrt_bp[i];
+
+    let v = 255.0 * (((s_idx/CH.Q.length) * 0.8) + 0.1);
+    v_s = v.toString();
+    let _co = "rgb(" + v_s + "," + v_s + "," + v_s + ")";
+
+    if (i in q_ch_map) {
+      _co = "rgb(0,200,200)";
+    }
+
+    _c.fill = _co;
+    _c.stroke= _co;
+
+  }
+
+  for (let i=0; i<CH.Q_ch_idx.length; i++) {
+    let qT = njs.add( njs.mul(scale, CH.Q[ CH.Q_ch_idx[i] ]), center );
+    project_arrow(p,qT, 7);
+  }
+
+
+  for (let i=0; i<CH.ch_p.length; i++) {
+    let q0 = CH.ch_p[i][0];
+    let q1 = CH.ch_p[i][1];
+    let q2 = CH.ch_p[i][2];
+
+    let _q0T = njs.add( njs.mul(scale, q0), center );
+    let _q1T = njs.add( njs.mul(scale, q1), center );
+    let _q2T = njs.add( njs.mul(scale, q2), center );
+
+    let l0 = two.makeLine( _q0T[0], _q0T[1], _q1T[0], _q1T[1] );
+    let l1 = two.makeLine( _q1T[0], _q1T[1], _q2T[0], _q2T[1] );
+    let l2 = two.makeLine( _q2T[0], _q2T[1], _q0T[0], _q0T[1] );
+  }
+
+  let _styles = {
+    "family" : "Libertine, Linux Libertine O",
+    "size": 15,
+    "weight": "normal"
+  };
+
+  let p_pnt = two.makeCircle( p[0], p[1], 5 );
+  //p_pnt.linewidth = 3;
+  p_pnt.stroke = "rgb(20,20,20)";
+  p_pnt.fill = "rgb(20,30,200)";
+
+
+
+}
+
+
+// 
+function fig_a(scale, center) {
+  let two = g_fig_ctx.two;
+
+  //let C = 400;
+  //let center = [300, 300, 100];
+
+  let C = scale;
+
 
   // 3 is pretty good
   //
@@ -525,7 +605,7 @@ function init() {
   u[2] = -(((Ndqp[0]*u[0]) + (Ndqp[1]*u[1]))/Ndqp[2]);
   let v = rodrigues(u, Ndqp, Math.PI/2);
 
-  let plane_len = 180;
+  let plane_len = 130;
 
   let a0 = njs.mul(plane_len, u);
   let a1 = njs.mul(plane_len, v);

@@ -410,9 +410,6 @@ function _anim_test() {
 function init() {
   let two = g_fig_ctx.two;
 
-  //let vr = [0,0,1];
-  //let theta = -Math.PI/16 + Math.PI/2;
-
   let C = 400;
 
   var ele = document.getElementById("ui_canvas");
@@ -422,23 +419,101 @@ function init() {
 
   let center = [300, 300, 100];
 
-  let _pT = njs.add( njs.mul(200, CH.p), center );
-  two.makeCircle( _pT[0], _pT[1], 2 );
+  let qrep_idx = 0;
+
+  let p = njs.add( njs.mul(C, CH.p), center );
+  let q = njs.add( njs.mul(C, CH.Q_ch_v[qrep_idx][1]), center );
+  let dqp = njs.sub( q, p );
+
+  let qsrt = [], qsrt_bp = {};
+  for (let i=0; i<CH.Q.length; i++) { qsrt.push( { "q": CH.Q[i], "idx": i } ); }
+  qsrt.sort( function(a,b) { return (a.q[2] < b.q[2]) ? -1 : ((a.q[2] > b.q[2]) ? 1 : 0); } );
+  for (let i=0; i<qsrt.length; i++) { qsrt_bp[ qsrt[i].idx ] = i; }
 
   for (let i=0; i<CH.Q.length; i++) {
     let _qT = njs.add( njs.mul(C, CH.Q[i]), center );
-    two.makeCircle( _qT[0], _qT[1], 2 );
+
+    let _c = two.makeCircle( _qT[0], _qT[1], 4 );
+
+    let s_idx = qsrt_bp[i];
+
+    //let v = 255.0 * (((1-(s_idx/CH.Q.length)) * 0.8) + 0.1);
+    let v = 255.0 * (((s_idx/CH.Q.length) * 0.8) + 0.1);
+    v_s = v.toString();
+
+    let _co = "rgb(" + v_s + "," + v_s + "," + v_s + ")";
+
+    _c.fill = _co;
+    _c.stroke= _co;
+
+
+    if (i==qrep_idx) { continue; }
+
+
+    if (njs.dot(dqp, njs.sub( _qT, q )) > 0) {
+
+      _co = "rgb(200,0,0)";
+
+      _c.fill = "rgb(200,0,0)";
+      _c.noStroke();
+    }
+
+    let dpq = njs.sub( p, q );
+    let Npq = njs.mul( 1/njs.norm2(dpq), dpq );
+
+    let t = njs.dot(Npq,q) - njs.dot(Npq,_qT);
+
+    let pl_v = njs.add(_qT, njs.mul(t, Npq));
+
+    //let disp_pl_v = njs.add( njs.mul(C, pl_v), center );
+
+    if ((t > 0) || (t > -100.5)) {
+
+      let _l = two.makeLine( pl_v[0], pl_v[1], _qT[0], _qT[1], 2 );
+      _l.dashes = [8,8];
+      _l.stroke = _co;
+      _l.opacity = 1.0;
+
+    }
+
+
   }
 
-  let p = njs.add( njs.mul(C, CH.p), center );
-  let q = njs.add( njs.mul(C, CH.Q_ch_v[0][1]), center );
+  //---
+  //---
+  // p, q, pq dashed line,
+  //
 
-  // completely wrong way to do it,
+  let _styles = {
+    "family" : "Libertine, Linux Libertine O",
+    "size": 15,
+    "weight": "normal"
+  };
+
+  let p_pnt = two.makeCircle( p[0], p[1], 5 );
+  //p_pnt.linewidth = 3;
+  p_pnt.stroke = "rgb(20,20,20)";
+  p_pnt.fill = "rgb(20,30,200)";
+
+  let pq_l = two.makeLine( p[0], p[1], q[0], q[1], 3 );
+  pq_l.dashes = [4,4];
+
+  let q_pnt = two.makeCircle( q[0], q[1], 5 );
+  q_pnt.noStroke();
+  q_pnt.fill = "rgb(200,20,200)";
+
+  let p_txt = two.makeText( "p", p[0] - 13, p[1] + 11, _styles );
+  let q_txt = two.makeText( "q", q[0] + 15, q[1], _styles );
+
+  //
+  //---
+  //---
+
   // we need to find a vector u, s.t. Nqp . (u - q) = 0
   // we can take u[0], u[1] to be known and solve for u[2],
   // then do a rodrigues to get the other one...
   //
-  let dqp = njs.sub( q, p );
+  //let dqp = njs.sub( q, p );
 
   let Ndqp = njs.mul( 1/njs.norm2(dqp), dqp );
   let u = [0,0,0];
@@ -462,21 +537,12 @@ function init() {
   two.makeLine( pc[2][0], pc[2][1], pc[3][0], pc[3][1] );
   two.makeLine( pc[3][0], pc[3][1], pc[0][0], pc[0][1] );
 
-
-  //p = rodrigues(p, [1,1,1], Math.PI/3);
-  //q = rodrigues(q, [1,1,1], Math.PI/3);
-
   project_arrow(p,q, 7);
-  //requestAnimationFrame(_anim_test);
 
-  //requestAnimationFrame(_cone_anim_test);
-
-  //let v = [ Math.random(), Math.random(), Math.random() ];
-  //project_cone(v, [100,100], 30);
   two.update();
-  return;
+}
 
-
+function _cruft() {
   let P = g_fig_ctx.P;
   let p2js = g_fig_ctx.p2js;
   let pbg2js = g_fig_ctx.pbg2js;

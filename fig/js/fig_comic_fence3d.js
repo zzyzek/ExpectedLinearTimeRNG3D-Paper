@@ -419,10 +419,13 @@ function init() {
 
   let center = [300, 300, 100];
 
-  let qrep_idx = 0;
+  // 3 is pretty good
+  //
+  let ch_idx = 3;
+  let qrep_idx = CH.Q_ch_idx[ch_idx];
 
   let p = njs.add( njs.mul(C, CH.p), center );
-  let q = njs.add( njs.mul(C, CH.Q_ch_v[qrep_idx][1]), center );
+  let q = njs.add( njs.mul(C, CH.Q_ch_v[ch_idx][1]), center );
   let dqp = njs.sub( q, p );
 
   let qsrt = [], qsrt_bp = {};
@@ -522,8 +525,10 @@ function init() {
   u[2] = -(((Ndqp[0]*u[0]) + (Ndqp[1]*u[1]))/Ndqp[2]);
   let v = rodrigues(u, Ndqp, Math.PI/2);
 
-  let a0 = njs.mul(100, u);
-  let a1 = njs.mul(100, v);
+  let plane_len = 180;
+
+  let a0 = njs.mul(plane_len, u);
+  let a1 = njs.mul(plane_len, v);
 
   let pc = [
     njs.add(q, njs.add(a0, a1)),

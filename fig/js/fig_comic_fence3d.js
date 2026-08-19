@@ -439,8 +439,16 @@ function init() {
   // then do a rodrigues to get the other one...
   //
   let dqp = njs.sub( q, p );
-  let a0 = rodrigues( dqp, [0,1,0], Math.PI/2 );
-  let a1 = rodrigues( dqp, [1,0,0], Math.PI/2 );
+
+  let Ndqp = njs.mul( 1/njs.norm2(dqp), dqp );
+  let u = [0,0,0];
+  u[0] = 1;
+  u[1] = 0;
+  u[2] = -(((Ndqp[0]*u[0]) + (Ndqp[1]*u[1]))/Ndqp[2]);
+  let v = rodrigues(u, Ndqp, Math.PI/2);
+
+  let a0 = njs.mul(100, u);
+  let a1 = njs.mul(100, v);
 
   let pc = [
     njs.add(q, njs.add(a0, a1)),
@@ -453,8 +461,6 @@ function init() {
   two.makeLine( pc[1][0], pc[1][1], pc[2][0], pc[2][1] );
   two.makeLine( pc[2][0], pc[2][1], pc[3][0], pc[3][1] );
   two.makeLine( pc[3][0], pc[3][1], pc[0][0], pc[0][1] );
-
-  console.log(a0, a1);
 
 
   //p = rodrigues(p, [1,1,1], Math.PI/3);

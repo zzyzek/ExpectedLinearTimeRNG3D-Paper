@@ -413,7 +413,9 @@ function init() {
 
   show_frame();
 
-  fig_b(300, [300,300,100]);
+  //fig_a(300, [300,300,100]);
+  //fig_b(300, [300,300,100]);
+  fig_cd(300, [300,300,100], true);
 
   two.update();
 }
@@ -485,6 +487,152 @@ function fig_b(scale, center) {
   p_pnt.fill = "rgb(20,30,200)";
 
 
+
+}
+
+function fig_cd(scale, center, show_extend) {
+  let two = g_fig_ctx.two;
+  show_extend = ((typeof show_extend === "undefined") ? false : show_extend);
+
+  fig_b(scale,center);
+
+  let bbox_w = [ [-1,-1,-1], [-1,-1,-1] ];
+
+  let p = njs.add( njs.mul(scale, CH.p), center );
+
+  for (let i=0; i<CH.ch_p.length; i++) {
+    let q0 = CH.ch_p[i][0];
+    let q1 = CH.ch_p[i][1];
+    let q2 = CH.ch_p[i][2];
+
+    let q = [q0, q1, q2];
+
+    if (i==0) {
+      for (let j=0; j<3; j++) {
+        bbox_w[0][j] = q0[j];
+        bbox_w[1][j] = q0[j];
+      }
+    }
+
+    for (let j=0; j<3; j++) {
+      for (let k=0; k<3; k++) {
+        if (q[j][k] < bbox_w[0][k]) { bbox_w[0][k] = q[j][k]; }
+        if (q[j][k] > bbox_w[1][k]) { bbox_w[1][k] = q[j][k]; }
+      }
+    }
+
+  }
+
+  let F = 1.5;
+  let FF = 1.25*F;
+
+  let bbox = [ [0,0,0], [0,0,0] ];
+
+  bbox[0] = njs.add( njs.mul(F*scale, bbox_w[0]), center );
+  bbox[1] = njs.add( njs.mul(F*scale, bbox_w[1]), center );
+
+  let bboxFF = [ [0,0,0], [0,0,0] ];
+
+  bboxFF[0] = njs.add( njs.mul(FF*scale, bbox_w[0]), center );
+  bboxFF[1] = njs.add( njs.mul(FF*scale, bbox_w[1]), center );
+
+  let bx = bbox[0][0];
+  let by = bbox[0][1];
+  let bz = bbox[0][2];
+
+  let bX = bbox[1][0];
+  let bY = bbox[1][1];
+  let bZ = bbox[1][2];
+
+  let fence_edge = [
+    // front 4
+    [ [ bx, by, bz ], [ bX, by, bz ] ],
+    [ [ bX, by, bz ], [ bX, bY, bz ] ],
+    [ [ bX, bY, bz ], [ bx, bY, bz ] ],
+    [ [ bx, bY, bz ], [ bx, by, bz ] ],
+
+    // back 4
+    [ [ bx, by, bZ ], [ bX, by, bZ ] ],
+    [ [ bX, by, bZ ], [ bX, bY, bZ ] ],
+    [ [ bX, bY, bZ ], [ bx, bY, bZ ] ],
+    [ [ bx, bY, bZ ], [ bx, by, bZ ] ],
+
+    // side
+    [ [ bx, by, bz ], [bx, by, bZ] ],
+    [ [ bX, by, bz ], [bX, by, bZ] ],
+    [ [ bX, bY, bz ], [bX, bY, bZ] ],
+    [ [ bx, bY, bz ], [bx, bY, bZ] ]
+  ];
+
+  bx = bboxFF[0][0];
+  by = bboxFF[0][1];
+  bz = bboxFF[0][2];
+
+  bX = bboxFF[1][0];
+  bY = bboxFF[1][1];
+  bZ = bboxFF[1][2];
+
+  let fence_edgeFF = [
+    // front 4
+    [ [ bx, by, bz ], [ bX, by, bz ] ],
+    [ [ bX, by, bz ], [ bX, bY, bz ] ],
+    [ [ bX, bY, bz ], [ bx, bY, bz ] ],
+    [ [ bx, bY, bz ], [ bx, by, bz ] ],
+
+    // back 4
+    [ [ bx, by, bZ ], [ bX, by, bZ ] ],
+    [ [ bX, by, bZ ], [ bX, bY, bZ ] ],
+    [ [ bX, bY, bZ ], [ bx, bY, bZ ] ],
+    [ [ bx, bY, bZ ], [ bx, by, bZ ] ],
+
+    // side
+    [ [ bx, by, bz ], [bx, by, bZ] ],
+    [ [ bX, by, bz ], [bX, by, bZ] ],
+    [ [ bX, bY, bz ], [bX, bY, bZ] ],
+    [ [ bx, bY, bz ], [bx, bY, bZ] ]
+  ];
+
+  // shift fence edges, force perspective
+  //
+  let dv = [75,-75,0];
+  dv = [40,-25,0];
+  let dvFF = [45,-30,0];
+  for (let i=0; i<4; i++) {
+    fence_edge[i][0] = njs.sub( fence_edge[i][0], dv );
+    fence_edge[i][1] = njs.sub( fence_edge[i][1], dv );
+
+    fence_edge[i+4][0] = njs.add( fence_edge[i+4][0], dv );
+    fence_edge[i+4][1] = njs.add( fence_edge[i+4][1], dv );
+
+    fence_edge[i+8][0] = njs.sub( fence_edge[i+8][0], dv );
+    fence_edge[i+8][1] = njs.add( fence_edge[i+8][1], dv );
+
+    //---
+
+    fence_edgeFF[i][0] = njs.sub( fence_edgeFF[i][0], dvFF );
+    fence_edgeFF[i][1] = njs.sub( fence_edgeFF[i][1], dvFF );
+
+    fence_edgeFF[i+4][0] = njs.add( fence_edgeFF[i+4][0], dvFF );
+    fence_edgeFF[i+4][1] = njs.add( fence_edgeFF[i+4][1], dvFF );
+
+    fence_edgeFF[i+8][0] = njs.sub( fence_edgeFF[i+8][0], dvFF );
+    fence_edgeFF[i+8][1] = njs.add( fence_edgeFF[i+8][1], dvFF );
+  }
+
+  for (let i=0; i<fence_edge.length; i++) {
+    let a = fence_edge[i][0];
+    let b = fence_edge[i][1];
+    two.makeLine(a[0], a[1], b[0], b[1] );
+  }
+
+  if (show_extend) {
+    for (let i=0; i<fence_edge.length; i++) {
+      let a = fence_edgeFF[i][0];
+      let b = fence_edgeFF[i][1];
+      let l = two.makeLine(a[0], a[1], b[0], b[1] );
+      l.dashes = [8,8];
+    }
+  }
 
 }
 

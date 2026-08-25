@@ -461,6 +461,8 @@ function fig_b(scale, center) {
   }
 
 
+  // need to remove redundant lines in plane
+  //
   for (let i=0; i<CH.ch_p.length; i++) {
     let q0 = CH.ch_p[i][0];
     let q1 = CH.ch_p[i][1];
@@ -596,7 +598,7 @@ function fig_cd(scale, center, show_extend) {
   //
   let dv = [75,-75,0];
   dv = [40,-25,0];
-  let dvFF = [45,-30,0];
+  let dvFF = [60,-40,0];
   for (let i=0; i<4; i++) {
     fence_edge[i][0] = njs.sub( fence_edge[i][0], dv );
     fence_edge[i][1] = njs.sub( fence_edge[i][1], dv );

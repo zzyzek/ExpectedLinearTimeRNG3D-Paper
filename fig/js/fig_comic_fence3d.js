@@ -302,6 +302,19 @@ function lex_cmp(a,b) {
   return 0;
 }
 
+function line_eq(lu,lv, _eps) {
+  _eps = ((typeof _eps === "undefined") ? (1/(1024*1024)) : _eps);
+
+  if (((njs.norm2( njs.sub(lu[0],lv[0]) ) < _eps) &&
+       (njs.norm2( njs.sub(lu[1],lv[1]) ) < _eps)) ||
+      ((njs.norm2( njs.sub(lu[0],lv[1]) ) < _eps) &&
+       (njs.norm2( njs.sub(lu[1],lv[0]) ) < _eps))) {
+    return 1;
+  }
+
+  return 0;
+}
+
 
 var g_debug = 0;
 
@@ -474,6 +487,7 @@ function fig_b(scale, center) {
     project_arrow(p,qT, 7);
   }
 
+  let _eps = (1/(1024*1024));
 
   //naive edge removal
   //
@@ -485,14 +499,66 @@ function fig_b(scale, center) {
     let u1 = CH.ch_p[i][1];
     let u2 = CH.ch_p[i][2];
 
-    all_lines.push( (lex_cmp(u0,u1) < 0) ? [u0,u1] : [u1,u0] );
-    all_lines.push( (lex_cmp(u1,u2) < 0) ? [u1,u2] : [u2,u1] );
-    all_lines.push( (lex_cmp(u2,u0) < 0) ? [u2,u0] : [u0,u2] );
+    for (let j=0; j<CH.ch_p.length; j++) {
+      if (i==j) { continue; }
+
+      let v0 = CH.ch_p[j][0];
+      let v1 = CH.ch_p[j][1];
+      let v2 = CH.ch_p[j][2];
+
+      let a = cross3( njs.sub(u1,u0), njs.sub(u2,u0) );
+      let b = cross3( njs.sub(v1,v0), njs.sub(v2,v0) );
+
+      a = njs.mul( 1/njs.norm2(a), a );
+      b = njs.mul( 1/njs.norm2(b), b );
+
+      let c = Math.abs(njs.dot(a,b));
+      if ( (c-1) < _eps ) {
+
+
+        let ul0 = ((lex_cmp(u0,u1) < 0) ? [u0,u1] : [u1,u0]);
+        let ul1 = ((lex_cmp(u1,u2) < 0) ? [u1,u2] : [u2,u1]);
+        let ul2 = ((lex_cmp(u2,u0) < 0) ? [u2,u0] : [u2,u0]);
+
+        let vl0 = ((lex_cmp(v0,v1) < 0) ? [v0,v1] : [v1,v0]);
+        let vl1 = ((lex_cmp(v1,v2) < 0) ? [v1,v2] : [v2,v1]);
+        let vl2 = ((lex_cmp(v2,v0) < 0) ? [v2,v0] : [v2,v0]);
+
+        //WIP!!!
+
+        if ( line_eq( ul0, vl0 ) ||
+             line_eq( ul0, vl1 ) ||
+             line_eq( ul0, vl2 ) ||
+             line_eq( ul1, vl0 ) ||
+             line_eq( ul1, vl1 ) ||
+             line_eq( ul1, vl2 ) ||
+             line_eq( ul2, vl0 ) ||
+             line_eq( ul2, vl1 ) ||
+             line_eq( ul2, vl2 ) ) {
+          console.log("!!",i,j, "...",
+            line_eq( ul0, vl0 ) , line_eq( ul0, vl1 ) , line_eq( ul0, vl2 ) ,
+            line_eq( ul1, vl0 ) , line_eq( ul1, vl1 ) , line_eq( ul1, vl2 ) ,
+            line_eq( ul2, vl0 ) , line_eq( ul2, vl1 ) , line_eq( ul2, vl2 ) );
+
+          console.log("  ", u0,u1,u2);
+          console.log("  ",v0,v1,v2);
+        }
+
+
+
+      }
+
+
+    }
+
+    //all_lines.push( (lex_cmp(u0,u1) < 0) ? [u0,u1] : [u1,u0] );
+    //all_lines.push( (lex_cmp(u1,u2) < 0) ? [u1,u2] : [u2,u1] );
+    //all_lines.push( (lex_cmp(u2,u0) < 0) ? [u2,u0] : [u0,u2] );
   }
 
+  /*
   all_lines.sort( function(a,b) { let _r = lex_cmp(a[0],b[0]); return ( (_r<0) ? -1 : ((_r>0) ? 1 : lex_cmp(a[1],b[1]))); } );
 
-  let _eps = (1/(1024*1024));
 
   // to find closest point between two lines:
   // https://math.stackexchange.com/questions/1993953/closest-points-between-two-lines
@@ -589,7 +655,7 @@ function fig_b(scale, center) {
 
     let l0 = two.makeLine( _q0T[0], _q0T[1], _q1T[0], _q1T[1] );
   }
-
+  */
 
   let _nope = false;
   if (_nope) {

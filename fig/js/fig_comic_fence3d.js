@@ -289,6 +289,20 @@ function e_cmp(a,b) {
   return 0;
 }
 
+function lex_cmp(a,b) {
+  if (a[0] < b[0]) { return -1; }
+  if (a[0] > b[0]) { return  1; }
+
+  if (a[1] < b[1]) { return -1; }
+  if (a[1] > b[1]) { return  1; }
+
+  if (a[2] < b[2]) { return -1; }
+  if (a[2] > b[2]) { return  1; }
+
+  return 0;
+}
+
+
 var g_debug = 0;
 
 function project_cone(v, xy, l) {
@@ -461,6 +475,125 @@ function fig_b(scale, center) {
   }
 
 
+  //naive edge removal
+  //
+  let all_lines = [];
+  let uniq_lines = [];
+  let ch_lines = [];
+  for (let i=0; i<CH.ch_p.length; i++) {
+    let u0 = CH.ch_p[i][0];
+    let u1 = CH.ch_p[i][1];
+    let u2 = CH.ch_p[i][2];
+
+    all_lines.push( (lex_cmp(u0,u1) < 0) ? [u0,u1] : [u1,u0] );
+    all_lines.push( (lex_cmp(u1,u2) < 0) ? [u1,u2] : [u2,u1] );
+    all_lines.push( (lex_cmp(u2,u0) < 0) ? [u2,u0] : [u0,u2] );
+  }
+
+  all_lines.sort( function(a,b) { let _r = lex_cmp(a[0],b[0]); return ( (_r<0) ? -1 : ((_r>0) ? 1 : lex_cmp(a[1],b[1]))); } );
+
+  let _eps = (1/(1024*1024));
+
+  // to find closest point between two lines:
+  // https://math.stackexchange.com/questions/1993953/closest-points-between-two-lines
+  //
+  // u(s) = u0 + s du
+  // v(t) = v0 + t dv
+  // -> w(s,t) =  (u0-v0) + s du - t dv
+  //    w(s,t) . du = 0 = (u0-v0).du + s |du|^2 - t dv.du
+  //    w(s,t) . dv = 0 = (u0-v0).dv + s du.dv - t |dv|^2
+  // -> |du|^2 s - dv.du t = -(u0-v0).du
+  //     du.dv s -|dv|^2 t = -(u0-v0).dv
+  //
+  // solve linear equations for s,t, plug back in to
+  // get smallest distance
+  //
+  // ... nice try but no
+  // the line is in plane. It will intersect at {0,1} at some other point
+  // and that doesn't really differentiate it from the others.
+  //
+  uniq_lines.push( all_lines[0] );
+  for (let i=1; i<all_lines.length; i++) {
+    let l_prv = all_lines[i-1];
+    let l_cur = all_lines[i];
+    if ( (njs.norm2( njs.sub(l_prv[0], l_cur[0]) ) < _eps) &&
+         (njs.norm2( njs.sub(l_prv[1], l_cur[1]) ) < _eps) ) {
+      continue;
+    }
+    uniq_lines.push(all_lines[i]);
+  }
+
+  let fin_lines = [];
+  for (let i=0; i<uniq_lines.length; i++) {
+
+    let _no_intersect = true;
+
+    for (let j=0; j<uniq_lines.length; j++) {
+      if (i==j) { continue; }
+      let ds = njs.sub( uniq_lines[i][0], uniq_lines[j][0] );
+      let du = njs.sub( uniq_lines[i][1], uniq_lines[i][0] );
+      let dv = njs.sub( uniq_lines[j][1], uniq_lines[j][0] );
+
+      let lu = njs.norm2Squared(du);
+      let lv = njs.norm2Squared(dv);
+
+      let b = [
+        -njs.dot( ds, du ),
+        -njs.dot( ds, dv )
+      ];
+
+      let A = [
+        [ lu, -njs.dot(dv,du) ],
+        [ njs.dot(dv,du), -lv ]
+      ];
+
+      let st = njs.solve(A,b);
+
+
+      if ((st[0] > _eps) && (st[0] < (1-_eps)) &&
+          (st[1] > _eps) && (st[1] < (1-_eps))) {
+        let dist = njs.norm2(
+          njs.sub(
+            njs.add( uniq_lines[i][0], njs.mul( st[0], du ) ),
+            njs.add( uniq_lines[j][0], njs.mul( st[1], dv ) )
+          )
+        );
+
+        console.log("ij:", i, j, "st:", st, "dist:", dist)
+
+
+        if (dist < _eps) {
+
+          //DEBUG
+          console.log(i,j,dist, st);
+
+          _no_intersect = false;
+          break;
+        }
+      }
+    }
+    if (_no_intersect) {
+      fin_lines.push( uniq_lines[i] );
+    }
+  }
+
+  console.log(">>>", all_lines.length, uniq_lines.length, fin_lines.length);
+
+  for (let i=0; i<fin_lines.length; i++) {
+    let q0 = fin_lines[i][0];
+    let q1 = fin_lines[i][1];
+
+    let _q0T = njs.add( njs.mul(scale, q0), center );
+    let _q1T = njs.add( njs.mul(scale, q1), center );
+
+
+    let l0 = two.makeLine( _q0T[0], _q0T[1], _q1T[0], _q1T[1] );
+  }
+
+
+  let _nope = false;
+  if (_nope) {
+
   // need to remove redundant lines in plane
   //
   for (let i=0; i<CH.ch_p.length; i++) {
@@ -475,6 +608,8 @@ function fig_b(scale, center) {
     let l0 = two.makeLine( _q0T[0], _q0T[1], _q1T[0], _q1T[1] );
     let l1 = two.makeLine( _q1T[0], _q1T[1], _q2T[0], _q2T[1] );
     let l2 = two.makeLine( _q2T[0], _q2T[1], _q0T[0], _q0T[1] );
+  }
+
   }
 
   let _styles = {

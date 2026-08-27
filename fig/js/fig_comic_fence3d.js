@@ -489,15 +489,61 @@ function fig_b(scale, center) {
 
   let _eps = (1/(1024*1024));
 
+  let Qp = [];
+  for (let i=0; i<CH.Q_ch_idx.length; i++) { Qp.push([]); }
+  for (let i=0; i<CH.Q_ch_idx.length; i++) {
+
+    let q = njs.sub( CH.Q_ch_v[i][1], CH.Q_ch_v[i][0] );
+    let Nq = njs.mul( 1/njs.norm2(q), q );
+
+    // ch_idx is nonsense...
+    // ch_idx is the index into the (nonexistent) intersection point cloud
+    //   from the Q planes. I didn't store the points but decided to
+    //   store the indicies into them.
+    //
+    for (let j=0; j<CH.ch_p.length; j++) {
+      let p0 = CH.ch_p[i][0];
+      let p1 = CH.ch_p[i][1];
+      let p2 = CH.ch_p[i][2];
+
+      let vp = cross3( njs.sub(p1,p0), njs.sub(p2,p0) );
+      let Np = njs.mul( 1/njs.norm2(vp), vp );
+
+      let c = Math.abs(njs.dot(Nq,Np));
+      if ( (c-1) < _eps ) {
+        Qp.push( [p0, CH.Q_ch_v[i][1] ] );
+        Qp.push( [p1, CH.Q_ch_v[i][1] ] );
+        Qp.push( [p2, CH.Q_ch_v[i][1] ] );
+      }
+
+    }
+  }
+
+  // need to figure out angle from q
+  for (let i=0; i<Qp.length; i++) {
+    Qp[i].sort( function(a,b) {
+    });
+  }
+
+  console.log(Qp_idx);
+
+
+  // not sure what's going on but this still doesn't work
+  /*
   //naive edge removal
   //
   let all_lines = [];
+  let rem_lines = [];
   let uniq_lines = [];
   let ch_lines = [];
   for (let i=0; i<CH.ch_p.length; i++) {
     let u0 = CH.ch_p[i][0];
     let u1 = CH.ch_p[i][1];
     let u2 = CH.ch_p[i][2];
+
+    all_lines.push( [[u0,u1],0] );
+    all_lines.push( [[u1,u2],0] );
+    all_lines.push( [[u2,u0],0] );
 
     for (let j=0; j<CH.ch_p.length; j++) {
       if (i==j) { continue; }
@@ -524,37 +570,52 @@ function fig_b(scale, center) {
         let vl1 = ((lex_cmp(v1,v2) < 0) ? [v1,v2] : [v2,v1]);
         let vl2 = ((lex_cmp(v2,v0) < 0) ? [v2,v0] : [v2,v0]);
 
-        //WIP!!!
+        let uu = [ul0, ul1, ul2];
+        let vv = [vl0, vl1, vl2];
 
-        if ( line_eq( ul0, vl0 ) ||
-             line_eq( ul0, vl1 ) ||
-             line_eq( ul0, vl2 ) ||
-             line_eq( ul1, vl0 ) ||
-             line_eq( ul1, vl1 ) ||
-             line_eq( ul1, vl2 ) ||
-             line_eq( ul2, vl0 ) ||
-             line_eq( ul2, vl1 ) ||
-             line_eq( ul2, vl2 ) ) {
-          console.log("!!",i,j, "...",
-            line_eq( ul0, vl0 ) , line_eq( ul0, vl1 ) , line_eq( ul0, vl2 ) ,
-            line_eq( ul1, vl0 ) , line_eq( ul1, vl1 ) , line_eq( ul1, vl2 ) ,
-            line_eq( ul2, vl0 ) , line_eq( ul2, vl1 ) , line_eq( ul2, vl2 ) );
+        for (let ii=0; ii<3; ii++) {
+          for (let jj=0; jj<3; jj++) {
+            if (line_eq(uu[ii], vv[jj]) == 1) {
 
-          console.log("  ", u0,u1,u2);
-          console.log("  ",v0,v1,v2);
+              console.log("removal:", i, j, "(", ii, jj, ")", uu, vv);
+              rem_lines.push( uu[ii] );
+              break;
+            }
+          }
         }
-
-
-
       }
-
-
     }
-
-    //all_lines.push( (lex_cmp(u0,u1) < 0) ? [u0,u1] : [u1,u0] );
-    //all_lines.push( (lex_cmp(u1,u2) < 0) ? [u1,u2] : [u2,u1] );
-    //all_lines.push( (lex_cmp(u2,u0) < 0) ? [u2,u0] : [u0,u2] );
   }
+
+  console.log("...rem_lines:", rem_lines.length);
+
+  for (let i=0; i<all_lines.length; i++) {
+    for (let j=0; j<rem_lines.length; j++) {
+      if (line_eq( all_lines[i][0], rem_lines[j] )) {
+        all_lines[i][1] = 1;;
+      }
+    }
+  }
+
+  let fin_lines = [];
+  for (let i=0; i<all_lines.length; i++) {
+    if (all_lines[i][1] == 0) {
+      fin_lines.push(all_lines[i]);
+    }
+  }
+
+  //DEBUG
+  fin_lines = [];
+  for (let i=0; i<CH.ch_p.length; i++) {
+    let u0 = CH.ch_p[i][0];
+    let u1 = CH.ch_p[i][1];
+    let u2 = CH.ch_p[i][2];
+
+    fin_lines.push( [u0,u1] );
+    fin_lines.push( [u1,u2] );
+    fin_lines.push( [u2,u0] );
+  }
+  */
 
   /*
   all_lines.sort( function(a,b) { let _r = lex_cmp(a[0],b[0]); return ( (_r<0) ? -1 : ((_r>0) ? 1 : lex_cmp(a[1],b[1]))); } );

@@ -89,6 +89,10 @@ let ch_pnt = [];
 
 let a_plane_idx = [];
 
+// Q plane intersect
+//
+let Qi = {};
+
 for (let i=0; i<candidate_pnt.length; i++) {
 
   let u = candidate_pnt[i];
@@ -96,17 +100,28 @@ for (let i=0; i<candidate_pnt.length; i++) {
 
   let min_idx = -1;
 
+  let _tqi = {};
+
   for (let j=0; j<Nq.length; j++) {
     let s = njs.dot( Nq[j], njs.sub( u, Q[j] ) );
     if (s > _EPS) { accept = false; break; }
 
-    if (s > -_EPS) { min_idx = j; }
+    if (s > -_EPS) {
+      _tqi[j] = 1;
+      min_idx = j;
+    }
   }
 
   if (accept) {
     ch_pnt.push(u);
-    a_plane_idx.push(min_idx);
+
+    for (let _i in _tqi) { Qi[_i] = 1; }
+    //a_plane_idx.push(min_idx);
   }
+}
+
+for (let _qi in Qi) {
+  a_plane_idx.push(parseInt(_qi));
 }
 
 a_plane_idx.sort( function(a,b) { return (a<b) ? -1 : ( (a>b) ? 1 : 0 ) ; } );
@@ -132,11 +147,13 @@ console.log("  ],");
 
 var ok = CH( ch_pnt );
 
+/*
 console.log("  \"ch_idx\":[");
 for (let i=0; i<ok.length; i++) {
   console.log("    [", ok[i][0], ",", ok[i][1], ",", ok[i][2], "]", ( i < (ok.length-1) ) ? "," : "" );
 }
 console.log("  ],");
+*/
 
 console.log("  \"ch_p\":[");
 for (let i=0; i<ok.length; i++) {

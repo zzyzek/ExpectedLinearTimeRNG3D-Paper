@@ -17,6 +17,8 @@ function fe() {
     [ [-1, 0, 0], [ 0,-1, 0] ],
   ];
 
+  let idir_v = [ [1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1] ];
+
   // idir
   //
   let face_edge = [
@@ -32,9 +34,6 @@ function fe() {
 
   let face_patch = [];
 
-
-
-
   for (let idir=0; idir<face_edge.length; idir++) {
     for (let i=0; i<face_edge[idir].length; i++) {
       for (let j=0; j<face_edge[idir][i].length; j++) {
@@ -43,24 +42,29 @@ function fe() {
     }
   }
 
-
+  let fudge = 1/50;
+  fudge = 0;
 
   for (let idir=0; idir<face_edge.length; idir++) {
     let du = idir_Tv[idir][0];
     let dv = idir_Tv[idir][1];
 
+    let _fe = [];
+    for (let i=0; i<face_edge[idir].length; i++) {
+      _fe.push( njs.sub( face_edge[idir][i], njs.mul(S, idir_v[idir]) ) );
+    }
+
     for (let iu=-1; iu<1; iu++) {
       for (let iv=-1; iv<1; iv++) {
 
-        // isn't right...
-        //
-        let a = njs.mul( iu/4, idir_Tv[idir][0] );
-        let b = njs.mul( iv/4, idir_Tv[idir][1] );
+        let a = njs.mul( (iu+0.5)/2, idir_Tv[idir][0] );
+        let b = njs.mul( (iv+0.5)/2, idir_Tv[idir][1] );
 
-        for (let i=0; i<face_edge[idir].length; i++) {
-          let w = njs.add( njs.mul( 1/2, face_edge[idir][i] ), a, b );
+        let _n = face_edge[idir].length;
+        for (let i=0; i<=_n; i++) {
+          let w = njs.add( njs.mul( 1/2, _fe[i%_n] ), a, b, njs.mul(S, idir_v[idir]) );
 
-          console.log(w[0], w[1], w[2]);
+          console.log(w[0] + fudge, w[1] + fudge, w[2] + fudge);
         }
         console.log("\n\n");
       }

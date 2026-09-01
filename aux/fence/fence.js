@@ -3,6 +3,9 @@ var njs = require("./numeric.js");
 
 var S = 0.5;
 
+var g_data = {
+};
+
 function cutplane(P, _mf) {
   _mf = ((typeof _mf === "undefined") ? 1.25 : _mf);
   let Pe = [];
@@ -36,10 +39,48 @@ function cutplane(P, _mf) {
     console.log("\n\n");
   }
 
-
+  let res_data = {
+    "P": P,
+    "Pe": Pe,
+    "com": p_com
+  };
+  return res_data;
 }
 
 function fe() {
+
+  let fence_post = [
+    [ [ 1,-1,-1 ], [ 1, 0,-1 ], [ 1, 1,-1 ],
+      [ 1,-1, 0 ], [ 1, 0, 0 ], [ 1, 1, 0 ],
+      [ 1,-1, 1 ], [ 1, 0, 1 ], [ 1, 1, 1 ] ],
+    [ [-1,-1,-1 ], [-1, 0,-1 ], [-1, 1,-1 ],
+      [-1,-1, 0 ], [-1, 0, 0 ], [-1, 1, 0 ],
+      [-1,-1, 1 ], [-1, 0, 1 ], [-1, 1, 1 ] ],
+
+    [ [-1, 1,-1 ], [  0, 1,-1 ], [ 1, 1,-1 ],
+      [-1, 1, 0 ], [  0, 1, 0 ], [ 1, 1, 0 ],
+      [-1, 1, 1 ], [  0, 1, 1 ], [ 1, 1, 1 ] ],
+    [ [-1,-1,-1 ], [  0,-1,-1 ], [ 1,-1,-1 ],
+      [-1,-1, 0 ], [  0,-1, 0 ], [ 1,-1, 0 ],
+      [-1,-1, 1 ], [  0,-1, 1 ], [ 1,-1, 1 ] ],
+
+    [ [-1,-1, 1 ], [-1,  0, 1 ], [-1, 1, 1 ],
+      [ 0,-1, 1 ], [ 0,  0, 1 ], [ 0, 1, 1 ],
+      [ 1,-1, 1 ], [ 1,  0, 1 ], [ 1, 1, 1 ] ],
+    [ [-1,-1,-1 ], [-1,  0,-1 ], [-1, 1,-1 ],
+      [ 0,-1,-1 ], [ 0,  0,-1 ], [ 0, 1,-1 ],
+      [ 1,-1,-1 ], [ 1,  0,-1 ], [ 1, 1,-1 ] ]
+  ];
+
+  let C = 0.5;
+  for (let idir=0; idir<6; idir++) {
+    for (let fpi=0; fpi<9; fpi++) {
+      for (let ixyz=0; ixyz<3; ixyz++) {
+        fence_post[idir][fpi][ixyz] *= C;
+      }
+    }
+  }
+
 
   let idir_Tv = [
     [ [ 0, 1, 0], [ 0, 0, 1] ],
@@ -66,8 +107,6 @@ function fe() {
     [ [-1, -1,  1], [-1,  1,  1], [ 1,  1,  1], [ 1, -1,  1] ],
     [ [ 1, -1, -1], [ 1,  1, -1], [-1,  1, -1], [-1, -1, -1] ]
   ];
-
-  let face_patch = [];
 
   for (let idir=0; idir<face_edge.length; idir++) {
     for (let i=0; i<face_edge[idir].length; i++) {
@@ -98,10 +137,10 @@ function fe() {
         let _n = face_edge[idir].length;
         for (let i=0; i<=_n; i++) {
           let w = njs.add( njs.mul( 1/2, _fe[i%_n] ), a, b, njs.mul(S, idir_v[idir]) );
-
           console.log(w[0] + fudge, w[1] + fudge, w[2] + fudge);
         }
         console.log("\n\n");
+
       }
     }
   }
@@ -116,54 +155,31 @@ function fe() {
     }
   }
 
+  let _data = { }
+
   let p0 = [ 0.25, -0.5, 0.5 ];
   let p1 = [ -0.5, 0.15, 0.5 ];
   let p2 = [ -0.5, -0.45, -0.5 ];
   let p3 = [ -0.15, -0.5, -0.5 ];
-  cutplane([p0, p1, p2, p3],1.25);
+  _data["plane_a"] = cutplane([p0, p1, p2, p3],1.25);
 
   let q0 = [ -.12, 0.5 , 0.5 ];
   let q1 = [ 0.5, 0.5 , 0.25 ];
   let q2 = [ 0.5, -.15, 0.5 ];
-  cutplane([q0,q1,q2], 1.6);
+  _data["plane_b"] = cutplane([q0,q1,q2], 1.6);
 
-  /*
-  let Pe = [];
+  _data["fence_post"] = fence_post;
 
-  let p_com = [0,0,0];
+  _data["p"] = [0,0,0];
+  _data["face_edge"] = face_edge;
 
-  for (let i=0; i<P.length; i++) {
-    let cur = i;
-    let nxt = (i+1)%P.length;
-    console.log(P[cur][0], P[cur][1], P[cur][2]);
-    console.log(P[nxt][0], P[nxt][1], P[nxt][2]);
-    console.log("\n\n");
-
-    njs.addeq(p_com, P[i]);
-  }
-
-  p_com[0] /= P.length;
-  p_com[1] /= P.length;
-  p_com[2] /= P.length;
-
-
-  for (let i=0; i<P.length; i++) {
-    Pe.push( njs.add( njs.mul(1.25, njs.sub( P[i], p_com )), p_com ) );
-  }
-  
-  for (let i=0; i<Pe.length; i++) {
-    let cur = i;
-    let nxt = (i+1)%Pe.length;
-    console.log(Pe[cur][0], Pe[cur][1], Pe[cur][2]);
-    console.log(Pe[nxt][0], Pe[nxt][1], Pe[nxt][2]);
-    console.log("\n\n");
-  }
-  */
-
-
+  return _data;
 }
 
-fe();
+var D = fe();
+
+
+console.log( "##", JSON.stringify(D));
 
 
 function ok() {

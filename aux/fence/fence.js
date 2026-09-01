@@ -3,6 +3,41 @@ var njs = require("./numeric.js");
 
 var S = 0.5;
 
+function cutplane(P, _mf) {
+  _mf = ((typeof _mf === "undefined") ? 1.25 : _mf);
+  let Pe = [];
+
+  let p_com = [0,0,0];
+
+  for (let i=0; i<P.length; i++) {
+    let cur = i;
+    let nxt = (i+1)%P.length;
+    console.log(P[cur][0], P[cur][1], P[cur][2]);
+    console.log(P[nxt][0], P[nxt][1], P[nxt][2]);
+    console.log("\n\n");
+
+    njs.addeq(p_com, P[i]);
+  }
+
+  p_com[0] /= P.length;
+  p_com[1] /= P.length;
+  p_com[2] /= P.length;
+
+
+  for (let i=0; i<P.length; i++) {
+    Pe.push( njs.add( njs.mul(_mf, njs.sub( P[i], p_com )), p_com ) );
+  }
+  
+  for (let i=0; i<Pe.length; i++) {
+    let cur = i;
+    let nxt = (i+1)%Pe.length;
+    console.log(Pe[cur][0], Pe[cur][1], Pe[cur][2]);
+    console.log(Pe[nxt][0], Pe[nxt][1], Pe[nxt][2]);
+    console.log("\n\n");
+  }
+
+
+}
 
 function fe() {
 
@@ -84,9 +119,18 @@ function fe() {
   let p0 = [ 0.25, -0.5, 0.5 ];
   let p1 = [ -0.5, 0.15, 0.5 ];
   let p2 = [ -0.5, -0.45, -0.5 ];
-  let p3 = [ -0.35, -0.5, -0.5 ];
+  let p3 = [ -0.15, -0.5, -0.5 ];
+  cutplane([p0, p1, p2, p3],1.25);
 
-  let P = [p0, p1, p2, p3];
+  let q0 = [ -.12, 0.5 , 0.5 ];
+  let q1 = [ 0.5, 0.5 , 0.25 ];
+  let q2 = [ 0.5, -.15, 0.5 ];
+  cutplane([q0,q1,q2], 1.6);
+
+  /*
+  let Pe = [];
+
+  let p_com = [0,0,0];
 
   for (let i=0; i<P.length; i++) {
     let cur = i;
@@ -94,9 +138,28 @@ function fe() {
     console.log(P[cur][0], P[cur][1], P[cur][2]);
     console.log(P[nxt][0], P[nxt][1], P[nxt][2]);
     console.log("\n\n");
+
+    njs.addeq(p_com, P[i]);
   }
 
+  p_com[0] /= P.length;
+  p_com[1] /= P.length;
+  p_com[2] /= P.length;
+
+
+  for (let i=0; i<P.length; i++) {
+    Pe.push( njs.add( njs.mul(1.25, njs.sub( P[i], p_com )), p_com ) );
+  }
   
+  for (let i=0; i<Pe.length; i++) {
+    let cur = i;
+    let nxt = (i+1)%Pe.length;
+    console.log(Pe[cur][0], Pe[cur][1], Pe[cur][2]);
+    console.log(Pe[nxt][0], Pe[nxt][1], Pe[nxt][2]);
+    console.log("\n\n");
+  }
+  */
+
 
 }
 

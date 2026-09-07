@@ -310,30 +310,107 @@ function project_arrow(p,q,l) {
 function show() {
   let two = g_fig_ctx.two;
   let data = DATA;
+  
+  let cx = two.width/2;
+  let cy = two.height/2;
 
-  let center = [300,300,300];
-  let scale = 100;
+  let center = [cx,cy,0];
+  let scale = cx*0.5;
 
   let fence_post = data.fence_post;
   let face_edge = data.face_edge;
+  let fence_post_cluster = data.fence_post_cluster;
 
   let M = [
-    [ 4.7, 0, 0 ],
-    [ 0, 3.5, 0 ],
+    [ 0.75, 0, 0.95 ],
+    [ -.925, 1, 0 ],
     [ 0, 0, 1 ]
   ];
 
   for (let idir=0; idir<fence_post.length; idir++) {
 
-    for (let fpi=0; fpi<fence_post[idir].length; fpi++) {
-      let fp_a = fence_post[idir][fpi];
-      let fp_b = fence_post[idir][(fpi+1)%fence_post[idir].length];
+    for (let fpci=0; fpci<fence_post_cluster.length; fpci++) {
 
-      let p_a = njs.add(njs.mul(scale, njs.dot(M, fp_a)), center);
-      let p_b = njs.add(njs.mul(scale, njs.dot(M, fp_b)), center);
+      for (let _idx=0; _idx<fence_post_cluster[fpci].length; _idx++) {
+        let fpi_a = fence_post_cluster[fpci][_idx];
+        let fpi_b = fence_post_cluster[fpci][(_idx+1)%fence_post_cluster[fpci].length];
+        let fp_a = fence_post[idir][fpi_a];
+        let fp_b = fence_post[idir][fpi_b];
 
-      two.makeLine( p_a[0], p_a[1], p_b[0], p_b[1] );
+        let p_a = njs.add(njs.mul(scale, njs.dot(M, fp_a)), center);
+        let p_b = njs.add(njs.mul(scale, njs.dot(M, fp_b)), center);
+
+        two.makeLine( p_a[0], p_a[1], p_b[0], p_b[1] );
+      }
+
     }
+  }
+
+  // fig generated with y as depth in mind...display here it's z as depth
+  // so things look bad...
+  //
+
+/*
+  //....
+  for (let i=0; i<data.plane_a.P.length; i++) {
+    data.plane_a.P[i][1] *=  1;
+    data.plane_a.P[i][2] *= -1;
+
+    let t = data.plane_a.P[i][2];
+    data.plane_a.P[i][2] = data.plane_a.P[i][1];
+    data.plane_a.P[i][1] = t;
+
+    t = data.plane_a.P[i][0];
+    data.plane_a.P[i][0] = data.plane_a.P[i][2];
+    data.plane_a.P[i][2] = t;
+  }
+
+  console.log(data.plane_a.P);
+
+  for (let i=0; i<data.plane_b.P.length; i++) {
+    data.plane_b.P[i][1] *=  1;
+    data.plane_b.P[i][2] *= -1;
+
+    let t = data.plane_b.P[i][2];
+    data.plane_b.P[i][2] = data.plane_b.P[i][1];
+    data.plane_b.P[i][1] = t;
+
+    t = data.plane_b.P[i][0];
+    data.plane_b.P[i][0] = data.plane_b.P[i][2];
+    data.plane_b.P[i][2] = t;
+  }
+
+  console.log(data.plane_b.P);
+  */
+
+
+
+  let P = data.plane_a.P;
+  for (let i=0; i<P.length; i++) {
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+    let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
+    two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+  }
+
+  P = data.plane_a.Pe;
+  for (let i=0; i<P.length; i++) {
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+    let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
+    two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+  }
+
+  P = data.plane_b.P;
+  for (let i=0; i<P.length; i++) {
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+    let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
+    two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+  }
+
+  P = data.plane_b.Pe;
+  for (let i=0; i<P.length; i++) {
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+    let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
+    two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
   }
 
 }
@@ -350,8 +427,63 @@ function init() {
   two.update();
 }
 
-
 var DATA = {
+  "plane_a": {
+    "P"  : [ [-0.5, -0.5, 0.35], [0.15, -0.5, -0.5], [-0.25, 0.5, -0.5], [-0.5, 0.5, -0.15] ],
+    "Pe" : [
+      [-0.55625, -0.625,  0.4875             ],
+      [ 0.25625, -0.625, -0.575              ],
+      [-0.24375,  0.625, -0.575              ],
+      [-0.55625,  0.625, -0.13749999999999998]
+    ],
+    "com": [-0.275, 0, -0.2]
+  },
+  "plane_b": {
+    "P"  : [ [0.5, -0.5, -0.12],    [0.5, -0.25, 0.5],                   [-0.15, -0.5, 0.5]                   ],
+    "Pe" : [ [0.63, -0.55, -0.368], [0.63, -0.14999999999999997, 0.624], [-0.41000000000000003, -0.55, 0.624] ],
+    "com": [ 0.2833333333333333,    -0.4166666666666667,                 0.29333333333333333                  ]
+  },
+  "fence_post": [
+    [
+      [0.5, -0.5, -0.5], [0.5,  0  , -0.5], [0.5,  0.5, -0.5], [0.5, -0.5,  0  ], [0.5,  0  ,  0  ], [0.5,  0.5,  0  ],
+      [0.5, -0.5,  0.5], [0.5,  0  ,  0.5], [0.5,  0.5,  0.5]
+    ],
+    [
+      [-0.5, -0.5, -0.5], [-0.5,  0  , -0.5], [-0.5,  0.5, -0.5], [-0.5, -0.5,  0  ], [-0.5,  0  ,  0  ],
+      [-0.5,  0.5,  0  ], [-0.5, -0.5,  0.5], [-0.5,  0  ,  0.5], [-0.5,  0.5,  0.5]
+    ],
+    [
+      [-0.5, 0.5, -0.5], [ 0  , 0.5, -0.5], [ 0.5, 0.5, -0.5], [-0.5, 0.5,  0  ], [ 0  , 0.5,  0  ], [ 0.5, 0.5,  0  ],
+      [-0.5, 0.5,  0.5], [ 0  , 0.5,  0.5], [ 0.5, 0.5,  0.5]
+    ],
+    [
+      [-0.5, -0.5, -0.5], [ 0  , -0.5, -0.5], [ 0.5, -0.5, -0.5], [-0.5, -0.5,  0  ], [ 0  , -0.5,  0  ],
+      [ 0.5, -0.5,  0  ], [-0.5, -0.5,  0.5], [ 0  , -0.5,  0.5], [ 0.5, -0.5,  0.5]
+    ],
+    [
+      [-0.5, -0.5, 0.5], [-0.5,  0  , 0.5], [-0.5,  0.5, 0.5], [ 0  , -0.5, 0.5], [ 0  ,  0  , 0.5], [ 0  ,  0.5, 0.5],
+      [ 0.5, -0.5, 0.5], [ 0.5,  0  , 0.5], [ 0.5,  0.5, 0.5]
+    ],
+    [
+      [-0.5, -0.5, -0.5], [-0.5,  0  , -0.5], [-0.5,  0.5, -0.5], [ 0  , -0.5, -0.5], [ 0  ,  0  , -0.5],
+      [ 0  ,  0.5, -0.5], [ 0.5, -0.5, -0.5], [ 0.5,  0  , -0.5], [ 0.5,  0.5, -0.5]
+    ]
+  ],
+  "p": [0, 0, 0],
+  "face_edge": [
+    [ [ 0.5, -0.5, -0.5], [ 0.5,  0.5, -0.5], [ 0.5,  0.5,  0.5], [ 0.5, -0.5,  0.5] ],
+    [ [-0.5, -0.5,  0.5], [-0.5,  0.5,  0.5], [-0.5,  0.5, -0.5], [-0.5, -0.5, -0.5] ],
+    [ [ 0.5,  0.5, -0.5], [-0.5,  0.5, -0.5], [-0.5,  0.5,  0.5], [ 0.5,  0.5,  0.5] ],
+    [ [ 0.5, -0.5,  0.5], [-0.5, -0.5,  0.5], [-0.5, -0.5, -0.5], [ 0.5, -0.5, -0.5] ],
+    [ [-0.5, -0.5,  0.5], [-0.5,  0.5,  0.5], [ 0.5,  0.5,  0.5], [ 0.5, -0.5,  0.5] ],
+    [ [ 0.5, -0.5, -0.5], [ 0.5,  0.5, -0.5], [-0.5,  0.5, -0.5], [-0.5, -0.5, -0.5] ]
+  ],
+  "fence_post_cluster": [ [0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7] ],
+  "_fence_post_cluster": [ [0, 1, 3, 4], [1, 2, 4, 5], [3, 4, 6, 7], [4, 5, 7, 8] ]
+}
+
+
+var _DATA = {
   "plane_a"   : {
     "P"  : [ [0.25, -0.5, 0.5], [-0.5, 0.15, 0.5], [-0.5, -0.45, -0.5], [-0.15, -0.5, -0.5] ],
     "Pe" : [
@@ -407,5 +539,7 @@ var DATA = {
     [ [ 0.5, -0.5,  0.5], [-0.5, -0.5,  0.5], [-0.5, -0.5, -0.5], [ 0.5, -0.5, -0.5] ],
     [ [-0.5, -0.5,  0.5], [-0.5,  0.5,  0.5], [ 0.5,  0.5,  0.5], [ 0.5, -0.5,  0.5] ],
     [ [ 0.5, -0.5, -0.5], [ 0.5,  0.5, -0.5], [-0.5,  0.5, -0.5], [-0.5, -0.5, -0.5] ]
-  ]
+  ],
+  "fence_post_cluster": [ [0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7] ],
+  "_fence_post_cluster": [ [0, 1, 3, 4], [1, 2, 4, 5], [3, 4, 6, 7], [4, 5, 7, 8] ]
 };

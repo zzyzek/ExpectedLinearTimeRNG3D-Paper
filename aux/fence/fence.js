@@ -49,6 +49,9 @@ function cutplane(P, _mf) {
 
 function fe() {
 
+  let fence_post_cluster = [ [0,1,3,4], [1,2,4,5], [3,4,6,7], [4,5,7,8] ];
+
+
   let fence_post = [
     [ [ 1,-1,-1 ], [ 1, 0,-1 ], [ 1, 1,-1 ],
       [ 1,-1, 0 ], [ 1, 0, 0 ], [ 1, 1, 0 ],
@@ -157,6 +160,9 @@ function fe() {
 
   let _data = { }
 
+  // y as depth
+  //
+  /*
   let p0 = [ 0.25, -0.5, 0.5 ];
   let p1 = [ -0.5, 0.15, 0.5 ];
   let p2 = [ -0.5, -0.45, -0.5 ];
@@ -167,11 +173,30 @@ function fe() {
   let q1 = [ 0.5, 0.5 , 0.25 ];
   let q2 = [ 0.5, -.15, 0.5 ];
   _data["plane_b"] = cutplane([q0,q1,q2], 1.6);
+  */
+
+  // z as depth
+  //
+  //let p0 = [ -0.5 , -0.5,  0.25 ];
+  let p0 = [ -0.5 , -0.5,  0.35 ];
+  let p1 = [  0.15, -0.5, -0.5  ];
+  //let p2 = [ -0.45,  0.5, -0.5  ];
+  let p2 = [ -0.25,  0.5, -0.5  ];
+  let p3 = [ -0.5 ,  0.5, -0.15 ];
+  _data["plane_a"] = cutplane([p0, p1, p2, p3],1.25);
+
+  let q0 = [  0.5 , -0.5 , -0.12 ];
+  let q1 = [  0.5 , -0.25,  0.5  ];
+  let q2 = [ -0.15, -0.5 ,  0.5  ];
+  _data["plane_b"] = cutplane([q0,q1,q2], 1.6);
+
+
 
   _data["fence_post"] = fence_post;
 
   _data["p"] = [0,0,0];
   _data["face_edge"] = face_edge;
+  _data["fence_post_cluster"] = fence_post_cluster;
 
   return _data;
 }

@@ -321,9 +321,17 @@ function show() {
   let face_edge = data.face_edge;
   let fence_post_cluster = data.fence_post_cluster;
 
+  /*
   let M = [
     [ 0.75, 0, 0.95 ],
     [ -.925, 1, 0 ],
+    [ 0, 0, 1 ]
+  ];
+  */
+
+  let M = [
+    [ 0.6, 0, 1 ],
+    [ -.45, 1, 0 ],
     [ 0, 0, 1 ]
   ];
 
@@ -427,6 +435,9 @@ function init() {
   two.update();
 }
 
+// NOTE:
+// planes points are for illustrative purposes, they *are not necessarily* actually make a (flat) plane in 3-space
+//
 var DATA = {
   "plane_a": {
     "P"  : [ [-0.5, -0.5, 0.35], [0.15, -0.5, -0.5], [-0.25, 0.5, -0.5], [-0.5, 0.5, -0.15] ],

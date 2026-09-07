@@ -308,6 +308,7 @@ function project_arrow(p,q,l) {
 }
 
 function show() {
+  let _eps = ((typeof EPS === "undefined") ? (1/(1024*1024)) : EPS);
   let two = g_fig_ctx.two;
   let data = DATA;
   
@@ -320,6 +321,12 @@ function show() {
   let fence_post = data.fence_post;
   let face_edge = data.face_edge;
   let fence_post_cluster = data.fence_post_cluster;
+
+  let idir_v = [
+    [1,0,0], [-1,0,0],
+    [0,1,0], [0,-1,0],
+    [0,0,1], [0,0,-1]
+  ];
 
   /*
   let M = [
@@ -335,6 +342,176 @@ function show() {
     [ 0, 0, 1 ]
   ];
 
+  // the matrix above maps coords to weird orientations...
+  // I"m taking the lazy route and emperically taking it
+  // instead of understanding it.
+  //
+  // +z goes *into* canvas, away from camera
+  //
+  let idir_map = [ 4, 5, 3, 2, 0, 1 ];
+
+  let disp_fp = [];
+
+
+  // collect fence posts (small line shooting out of plane
+  //
+  for (let idir=0; idir<fence_post.length; idir++) {
+    disp_fp.push([]);
+    for (let fpi=0; fpi<fence_post[idir].length; fpi++) {
+      let fp = fence_post[idir][fpi];
+      let fq = njs.add( njs.mul(.025, idir_v[idir]), fp );
+      //let fp_t = njs.add(njs.mul(scale, njs.dot(M, fp)), center);
+      let fp_t = njs.add(njs.mul(scale, njs.dot(M, fp)), center);
+      let fq_t = njs.add(njs.mul(scale, njs.dot(M, fq)), center);
+
+      //two.makeCircle( fp_t[0], fp_t[1], 4);
+      //two.makeCircle( fq_t[0], fq_t[1], 4);
+
+      disp_fp[idir].push( [fp_t[0], fp_t[1], fq_t[0], fq_t[1]] );
+
+    }
+  }
+
+  // display fenceposts (skipping faces not directly visible to camera
+  //
+  for (let idir=0; idir<disp_fp.length; idir++) {
+
+    let _eff_idir = idir_map[idir];
+    if ( !((_eff_idir == 0) || (_eff_idir == 2) || (_eff_idir == 5)) ) { continue; }
+
+    for (let fpi=0; fpi<disp_fp[idir].length; fpi++) {
+      let lpq = disp_fp[idir][fpi];
+      let _l = two.makeLine( lpq[0], lpq[1], lpq[2], lpq[3] );
+      _l.linewidth = 8;
+      _l.cap = "round";
+      _l.stroke = "rgb(250,120,120)";
+      _l.noFill();
+      
+    }
+  }
+
+  // back edges of cube
+  // hard coded by observation
+  //
+  if (true) {
+    let _id = idir_map[1];
+    let p = face_edge[_id][0];
+    let q = face_edge[_id][1];
+
+    let _lw = 2;
+
+    let p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+    let q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+    let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    _l.linewidth = _lw;
+    //_l.stroke = "rgb(255,30,30)";
+    _l.dashes = [8,8];
+    _l.opacity = 0.8;
+
+    _id = idir_map[1];
+    p = face_edge[_id][1];
+    q = face_edge[_id][2];
+
+    p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+    q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+    _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    _l.linewidth = _lw;
+    //_l.stroke = "rgb(255,30,30)";
+    _l.dashes = [8,8];
+    _l.opacity = 0.8;
+
+    _id = idir_map[4];
+    p = face_edge[_id][1];
+    q = face_edge[_id][2];
+
+    p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+    q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+    _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    _l.linewidth = _lw;
+    //_l.stroke = "rgb(255,30,30)";
+    _l.dashes = [8,8];
+    _l.opacity = 0.8;
+
+  }
+
+  // front patch lines
+  //
+  if (true) {
+    let _lw = 2;
+    let _id = idir_map[0];
+    let dv0 = [0.5,0,0];
+    let dv1 = [0,-0.5,0];
+    for (let i=0; i<3; i++) {
+      let p = njs.add( njs.mul(i, dv0), face_edge[_id][0]);
+      let q = njs.add( njs.mul(i, dv0), face_edge[_id][1]);
+
+      let p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+      let q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+      let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      //_l.stroke = "rgb(255,30,30)";
+
+      p = njs.add( njs.mul(i,dv1), face_edge[_id][1]);
+      q = njs.add( njs.mul(i,dv1), face_edge[_id][2]);
+
+      p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+      q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+      _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      //_l.stroke = "rgb(255,30,30)";
+    }
+
+    _id = idir_map[2];
+    dv0 = [0,0,-0.5];
+    dv1 = [0.5,0,0];
+    for (let i=0; i<3; i++) {
+      let p = njs.add( njs.mul(i, dv0), face_edge[_id][0]);
+      let q = njs.add( njs.mul(i, dv0), face_edge[_id][1]);
+
+      let p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+      let q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+      let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      //_l.stroke = "rgb(255,30,30)";
+
+      p = njs.add( njs.mul(i,dv1), face_edge[_id][1]);
+      q = njs.add( njs.mul(i,dv1), face_edge[_id][2]);
+
+      p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+      q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+      _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      //_l.stroke = "rgb(255,30,30)";
+    }
+
+    _id = idir_map[5];
+    dv0 = [0,0,-0.5];
+    dv1 = [0,-0.5,0];
+    for (let i=0; i<3; i++) {
+      let p = njs.add( njs.mul(i, dv0), face_edge[_id][0]);
+      let q = njs.add( njs.mul(i, dv0), face_edge[_id][1]);
+
+      let p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+      let q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+      let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      //_l.stroke = "rgb(255,30,30)";
+
+      p = njs.add( njs.mul(i,dv1), face_edge[_id][1]);
+      q = njs.add( njs.mul(i,dv1), face_edge[_id][2]);
+
+      p_t = njs.add(njs.mul(scale, njs.dot(M, p)), center);
+      q_t = njs.add(njs.mul(scale, njs.dot(M, q)), center);
+      _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      //_l.stroke = "rgb(255,30,30)";
+    }
+
+  }
+
+  /*
+  // draw patch outlines
+  //
   for (let idir=0; idir<fence_post.length; idir++) {
 
     for (let fpci=0; fpci<fence_post_cluster.length; fpci++) {
@@ -345,54 +522,63 @@ function show() {
         let fp_a = fence_post[idir][fpi_a];
         let fp_b = fence_post[idir][fpi_b];
 
-        let p_a = njs.add(njs.mul(scale, njs.dot(M, fp_a)), center);
-        let p_b = njs.add(njs.mul(scale, njs.dot(M, fp_b)), center);
+        let _eff_idir = idir_map[idir];
+        if ((_eff_idir == 0) || (_eff_idir == 2) || (_eff_idir == 5)) {
+          let p_a = njs.add(njs.mul(scale, njs.dot(M, fp_a)), center);
+          let p_b = njs.add(njs.mul(scale, njs.dot(M, fp_b)), center);
+          let _l = two.makeLine( p_a[0], p_a[1], p_b[0], p_b[1] );
 
-        two.makeLine( p_a[0], p_a[1], p_b[0], p_b[1] );
+        }
+        else {
+          continue;
+
+          let dab = njs.sub(fp_a, fp_b);
+
+          // HACK
+          // hardcoded by obsevation
+          //
+          if ( ((Math.abs(-0.5 - fp_a[0]) < _eps) &&
+                (Math.abs(-0.5 - fp_b[0]) < _eps)) ||
+               ((Math.abs(-0.5 - fp_a[1]) < _eps) &&
+                (Math.abs(-0.5 - fp_b[1]) < _eps)) ||
+               ((Math.abs( 0.5 - fp_a[2]) < _eps) &&
+                (Math.abs( 0.5 - fp_b[2]) < _eps)) 
+          ) {
+            //skip
+          }
+
+          else {
+
+            let _eff_idir = idir_map[idir];
+
+
+            if (true) {
+
+              let p_a = njs.add(njs.mul(scale, njs.dot(M, fp_a)), center);
+              let p_b = njs.add(njs.mul(scale, njs.dot(M, fp_b)), center);
+              let _l = two.makeLine( p_a[0], p_a[1], p_b[0], p_b[1] );
+
+              let _r = Math.floor(Math.random()*256);
+              let _g = Math.floor(Math.random()*256);
+              let _b = Math.floor(Math.random()*256);
+
+              //_l.linewidth = 2 + (8*Math.random());
+              //_l.stroke = "rgb(" + _r.toString() + "," + _g.toString() + "," + _b.toString() + ")";
+              _l.dashes = [8,8];
+              _l.opacity = 0.8;
+            }
+          }
+
+        }
+
       }
 
     }
   }
-
-  // fig generated with y as depth in mind...display here it's z as depth
-  // so things look bad...
-  //
-
-/*
-  //....
-  for (let i=0; i<data.plane_a.P.length; i++) {
-    data.plane_a.P[i][1] *=  1;
-    data.plane_a.P[i][2] *= -1;
-
-    let t = data.plane_a.P[i][2];
-    data.plane_a.P[i][2] = data.plane_a.P[i][1];
-    data.plane_a.P[i][1] = t;
-
-    t = data.plane_a.P[i][0];
-    data.plane_a.P[i][0] = data.plane_a.P[i][2];
-    data.plane_a.P[i][2] = t;
-  }
-
-  console.log(data.plane_a.P);
-
-  for (let i=0; i<data.plane_b.P.length; i++) {
-    data.plane_b.P[i][1] *=  1;
-    data.plane_b.P[i][2] *= -1;
-
-    let t = data.plane_b.P[i][2];
-    data.plane_b.P[i][2] = data.plane_b.P[i][1];
-    data.plane_b.P[i][1] = t;
-
-    t = data.plane_b.P[i][0];
-    data.plane_b.P[i][0] = data.plane_b.P[i][2];
-    data.plane_b.P[i][2] = t;
-  }
-
-  console.log(data.plane_b.P);
   */
 
-
-
+  // draw intersecting planes
+  //
   let P = data.plane_a.P;
   for (let i=0; i<P.length; i++) {
     let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);

@@ -351,37 +351,22 @@ function show() {
   let idir_map = [ 4, 5, 3, 2, 0, 1 ];
 
   let disp_fp = [];
+  let fp_line = [];
 
 
   // collect fence posts (small line shooting out of plane
   //
   for (let idir=0; idir<fence_post.length; idir++) {
     disp_fp.push([]);
+    fp_line.push([]);
+    let ds = 0.025;
+    ds = 0.04;
     for (let fpi=0; fpi<fence_post[idir].length; fpi++) {
       let fp = fence_post[idir][fpi];
-      let fq = njs.add( njs.mul(.025, idir_v[idir]), fp );
+      let fq = njs.add( njs.mul(ds, idir_v[idir]), fp );
       let fp_t = njs.add(njs.mul(scale, njs.dot(M, fp)), center);
       let fq_t = njs.add(njs.mul(scale, njs.dot(M, fq)), center);
-
       disp_fp[idir].push( [fp_t[0], fp_t[1], fq_t[0], fq_t[1]] );
-    }
-  }
-
-  // display fenceposts (skipping faces not directly visible to camera
-  //
-  for (let idir=0; idir<disp_fp.length; idir++) {
-
-    let _eff_idir = idir_map[idir];
-    if ( !((_eff_idir == 0) || (_eff_idir == 2) || (_eff_idir == 5)) ) { continue; }
-
-    for (let fpi=0; fpi<disp_fp[idir].length; fpi++) {
-      let lpq = disp_fp[idir][fpi];
-      let _l = two.makeLine( lpq[0], lpq[1], lpq[2], lpq[3] );
-      _l.linewidth = 8;
-      _l.cap = "round";
-      _l.stroke = "rgb(250,120,120)";
-      _l.noFill();
-      
     }
   }
 
@@ -504,94 +489,109 @@ function show() {
 
   }
 
-  /*
-  // draw patch outlines
-  //
-  for (let idir=0; idir<fence_post.length; idir++) {
-
-    for (let fpci=0; fpci<fence_post_cluster.length; fpci++) {
-
-      for (let _idx=0; _idx<fence_post_cluster[fpci].length; _idx++) {
-        let fpi_a = fence_post_cluster[fpci][_idx];
-        let fpi_b = fence_post_cluster[fpci][(_idx+1)%fence_post_cluster[fpci].length];
-        let fp_a = fence_post[idir][fpi_a];
-        let fp_b = fence_post[idir][fpi_b];
-
-        let _eff_idir = idir_map[idir];
-        if ((_eff_idir == 0) || (_eff_idir == 2) || (_eff_idir == 5)) {
-          let p_a = njs.add(njs.mul(scale, njs.dot(M, fp_a)), center);
-          let p_b = njs.add(njs.mul(scale, njs.dot(M, fp_b)), center);
-          let _l = two.makeLine( p_a[0], p_a[1], p_b[0], p_b[1] );
-
-        }
-        else {
-          continue;
-
-          let dab = njs.sub(fp_a, fp_b);
-
-          // HACK
-          // hardcoded by obsevation
-          //
-          if ( ((Math.abs(-0.5 - fp_a[0]) < _eps) &&
-                (Math.abs(-0.5 - fp_b[0]) < _eps)) ||
-               ((Math.abs(-0.5 - fp_a[1]) < _eps) &&
-                (Math.abs(-0.5 - fp_b[1]) < _eps)) ||
-               ((Math.abs( 0.5 - fp_a[2]) < _eps) &&
-                (Math.abs( 0.5 - fp_b[2]) < _eps)) 
-          ) {
-            //skip
-          }
-
-          else {
-
-            let _eff_idir = idir_map[idir];
-
-
-            if (true) {
-
-              let p_a = njs.add(njs.mul(scale, njs.dot(M, fp_a)), center);
-              let p_b = njs.add(njs.mul(scale, njs.dot(M, fp_b)), center);
-              let _l = two.makeLine( p_a[0], p_a[1], p_b[0], p_b[1] );
-
-              let _r = Math.floor(Math.random()*256);
-              let _g = Math.floor(Math.random()*256);
-              let _b = Math.floor(Math.random()*256);
-
-              //_l.linewidth = 2 + (8*Math.random());
-              //_l.stroke = "rgb(" + _r.toString() + "," + _g.toString() + "," + _b.toString() + ")";
-              _l.dashes = [8,8];
-              _l.opacity = 0.8;
-            }
-          }
-
-        }
-
-      }
-
-    }
-  }
-  */
-
   // draw intersecting planes
   //
-  let P = data.plane_a.P;
+  let P_a_t = [], Pe_a_t = [],
+      P_b_t = [], Pe_b_t = [];
+
   let _lw = 3;
-  let _lo = 0.7;
+  let _lo = 0.8;
+  let _pc = "#fa4d56";
+  _pc = "#d12771";
+
+  for (let i=0; i<data.plane_a.P.length; i++) {
+    let P = data.plane_a.P;
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+    P_a_t.push(p_t);
+  }
+
+  for (let i=0; i<data.plane_a.Pe.length; i++) {
+    let P = data.plane_a.Pe;
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+    Pe_a_t.push(p_t);
+  }
+
+  for (let i=0; i<data.plane_b.P.length; i++) {
+    let P = data.plane_b.P;
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+    P_b_t.push(p_t);
+  }
+
+  for (let i=0; i<data.plane_b.Pe.length; i++) {
+    let P = data.plane_b.Pe;
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+    Pe_b_t.push(p_t);
+  }
+
+
+  // fill in cutting plane extensions
+  //
+  let _fill0 = [ Pe_a_t[3], P_a_t[3], P_a_t[0], P_a_t[1], Pe_a_t[1], Pe_a_t[0] ];
+  let _filla0 = makeTwoAnchor(_fill0);
+  let _fillp0 = two.makePath(_filla0, true);
+  _fillp0.noStroke();
+  _fillp0.fill = "rgb(255,255,255)";
+
+  let _fill1 = [ P_b_t[2], P_b_t[1], Pe_b_t[1], Pe_b_t[2], Pe_b_t[0], P_b_t[0] ];
+  let _filla1 = makeTwoAnchor(_fill1);
+  let _fillp1 = two.makePath(_filla1, true);
+  _fillp1.noStroke();
+  _fillp1.fill = "rgb(255,255,255)";
+
+
+  let P = data.plane_a.P;
   for (let i=0; i<P.length; i++) {
     let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
     let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
     let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
     _l.linewidth = _lw;
     _l.opacity = _lo;
+    _l.stroke = _pc;
+
+    //P_a_t.push(p_t);
+
+    if ((i==1) || (i==2)) { _l.dashes = [8,8]; }
   }
 
   P = data.plane_a.Pe;
   for (let i=0; i<P.length; i++) {
-    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
-    let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
-    let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
-    _l.linewidth = _lw;
-    _l.opacity = _lo;
+
+    //Pe_a_t.push( njs.add(njs.mul(scale, njs.dot(M,P[i])), center) );
+
+    if (i==1) {
+      let _p = P[i];
+      let _q = P[(i+1)%P.length];
+
+      let _g = 0.85;
+      let _pt = njs.add( njs.mul(_g, _p), njs.mul(1-_g,_q) );
+
+      let p_t = njs.add(njs.mul(scale, njs.dot(M,_p)), center);
+      //let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
+      let q_t = njs.add(njs.mul(scale, njs.dot(M,_pt)), center);
+      let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      _l.opacity = _lo;
+      _l.stroke = _pc;
+
+
+      p_t = njs.add(njs.mul(scale, njs.dot(M,_q)), center);
+      q_t = njs.add(njs.mul(scale, njs.dot(M,_pt)), center);
+      _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      _l.opacity = _lo;
+      _l.stroke = _pc;
+      _l.dashes = [8,8];
+
+    }
+    else {
+      let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+      let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
+      let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      _l.opacity = _lo;
+      _l.stroke = _pc;
+
+    }
   }
 
   P = data.plane_b.P;
@@ -601,16 +601,138 @@ function show() {
     let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
     _l.linewidth = _lw;
     _l.opacity = _lo;
+    _l.stroke = _pc;
+
+    if (i==0) { _l.dashes = [8,8]; }
+
+    //P_b_t.push( njs.add(njs.mul(scale, njs.dot(M,P[i])), center) );
   }
 
   P = data.plane_b.Pe;
   for (let i=0; i<P.length; i++) {
-    let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
-    let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
-    let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
-    _l.linewidth = _lw;
-    _l.opacity = _lo;
+
+    //Pe_b_t.push( njs.add(njs.mul(scale, njs.dot(M,P[i])), center) );
+
+    if (i==0) {
+      let _p = P[i];
+      let _q = P[(i+1)%P.length];
+
+      let _g = 0.7;
+      let _pt0 = njs.add( njs.mul(_g, _p), njs.mul(1-_g,_q) );
+
+      let p_t = njs.add(njs.mul(scale, njs.dot(M,_p)), center);
+      let q_t = njs.add(njs.mul(scale, njs.dot(M,_pt0)), center);
+      let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      _l.opacity = _lo;
+      _l.stroke = _pc;
+
+      _g = 0.2;
+      _pt1 = njs.add( njs.mul(_g, _p), njs.mul(1-_g,_q) );
+
+      p_t = njs.add(njs.mul(scale, njs.dot(M,_q)), center);
+      q_t = njs.add(njs.mul(scale, njs.dot(M,_pt1)), center);
+      _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      _l.opacity = _lo;
+      _l.stroke = _pc;
+
+      p_t = njs.add(njs.mul(scale, njs.dot(M,_pt0)), center);
+      q_t = njs.add(njs.mul(scale, njs.dot(M,_pt1)), center);
+      _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      _l.opacity = _lo;
+      _l.stroke = _pc;
+      _l.dashes = [8,8];
+
+    }
+    else {
+      let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
+      let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
+      let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+      _l.linewidth = _lw;
+      _l.opacity = _lo;
+      _l.stroke = _pc;
+    }
   }
+
+  let _co0 = "#fa4d56"
+  let _co1 = "#d4bbff";
+
+
+
+
+
+  // display fenceposts (skipping faces not directly visible to camera
+  //
+  let idir_ord = [3,1,4];
+  //for (let idir=0; idir<disp_fp.length; idir++) {
+    //let _eff_idir = idir_map[idir];
+    //if ( !((_eff_idir == 0) || (_eff_idir == 2) || (_eff_idir == 5)) ) { continue; }
+  for (let _i=0; _i<idir_ord.length; _i++) {
+    let idir = idir_ord[_i];
+    for (let fpi=0; fpi<disp_fp[idir].length; fpi++) {
+      let lpq = disp_fp[idir][fpi];
+      let _l = two.makeLine( lpq[0], lpq[1], lpq[2], lpq[3] );
+      //_l.linewidth = 8;
+      _l.linewidth = 8;
+      _l.cap = "round";
+      _l.stroke = "rgb(250,120,120)";
+      _l.stroke = "#d2a106";
+      _l.stroke = "#bae5ff";
+      _l.noFill();
+      _l.opacity = 0.9;
+      fp_line[idir].push(_l);
+    }
+  }
+
+
+
+  // plane a
+  //
+  fp_line[1][0].stroke = _co0;
+  fp_line[1][1].stroke = _co0;
+  fp_line[1][3].stroke = _co0;
+  fp_line[1][4].stroke = _co0;
+
+  fp_line[1][2].stroke = _co1;
+
+  fp_line[3][0].stroke = _co1;
+  fp_line[3][1].stroke = _co1;
+  fp_line[3][3].stroke = _co1;
+
+
+  // plane b
+  //
+  fp_line[3][8].stroke = _co1;
+  fp_line[3][7].stroke = _co1;
+  fp_line[3][5].stroke = _co1;
+
+  fp_line[4][3].stroke = _co1;
+  fp_line[4][6].stroke = _co1;
+
+
+  // secured patch
+  //
+  let _id = idir_map[5];
+  let _patch = [],
+      _patch_t = [];
+  for (let i=0; i<4; i++) {
+    let fpi = fence_post_cluster[0][i];
+    let p = fence_post[_id][fpi];
+    let p_t = njs.add(njs.mul(scale, njs.dot(M,p)), center);
+    _patch.push( p );
+    _patch_t.push( p_t );
+  }
+  let _patch_a = makeTwoAnchor( _patch_t );
+  let _pa = two.makePath( _patch_a, true );
+  _pa.fill = "#ff73b6";
+  _pa.opacity = 0.8;
+  _pa.noStroke();
+
+
+
+
 
 }
 

@@ -360,15 +360,10 @@ function show() {
     for (let fpi=0; fpi<fence_post[idir].length; fpi++) {
       let fp = fence_post[idir][fpi];
       let fq = njs.add( njs.mul(.025, idir_v[idir]), fp );
-      //let fp_t = njs.add(njs.mul(scale, njs.dot(M, fp)), center);
       let fp_t = njs.add(njs.mul(scale, njs.dot(M, fp)), center);
       let fq_t = njs.add(njs.mul(scale, njs.dot(M, fq)), center);
 
-      //two.makeCircle( fp_t[0], fp_t[1], 4);
-      //two.makeCircle( fq_t[0], fq_t[1], 4);
-
       disp_fp[idir].push( [fp_t[0], fp_t[1], fq_t[0], fq_t[1]] );
-
     }
   }
 
@@ -580,31 +575,41 @@ function show() {
   // draw intersecting planes
   //
   let P = data.plane_a.P;
+  let _lw = 3;
+  let _lo = 0.7;
   for (let i=0; i<P.length; i++) {
     let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
     let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
-    two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    _l.linewidth = _lw;
+    _l.opacity = _lo;
   }
 
   P = data.plane_a.Pe;
   for (let i=0; i<P.length; i++) {
     let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
     let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
-    two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    _l.linewidth = _lw;
+    _l.opacity = _lo;
   }
 
   P = data.plane_b.P;
   for (let i=0; i<P.length; i++) {
     let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
     let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
-    two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    _l.linewidth = _lw;
+    _l.opacity = _lo;
   }
 
   P = data.plane_b.Pe;
   for (let i=0; i<P.length; i++) {
     let p_t = njs.add(njs.mul(scale, njs.dot(M,P[i])), center);
     let q_t = njs.add(njs.mul(scale, njs.dot(M,P[(i+1)%P.length])), center);
-    two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    let _l = two.makeLine( p_t[0], p_t[1], q_t[0], q_t[1] );
+    _l.linewidth = _lw;
+    _l.opacity = _lo;
   }
 
 }

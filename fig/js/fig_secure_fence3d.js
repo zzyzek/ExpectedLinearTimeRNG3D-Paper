@@ -316,7 +316,7 @@ function show() {
   let cy = two.height/2;
 
   let center = [cx,cy,0];
-  let scale = cx*0.5;
+  let scale = cx*0.75;
 
   let fence_post = data.fence_post;
   let face_edge = data.face_edge;
@@ -339,6 +339,12 @@ function show() {
   let M = [
     [ 0.6, 0, 1 ],
     [ -.45, 1, 0 ],
+    [ 0, 0, 1 ]
+  ];
+
+  M = [
+    [ 0.6, 0, 1 ],
+    [ -.35, 1, 0 ],
     [ 0, 0, 1 ]
   ];
 

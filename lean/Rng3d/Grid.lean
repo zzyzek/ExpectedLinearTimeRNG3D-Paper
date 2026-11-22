@@ -1,8 +1,17 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.Algorithm
+
+@[expose] public section
+
+/-!
 Elementary facts about the grid: cell bounds, cell centres, and the
 relation between Chebyshev cell distance and coordinate distance.
 -/
-import Rng3d.Algorithm
 
 open Finset
 

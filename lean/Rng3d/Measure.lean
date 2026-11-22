@@ -1,9 +1,18 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.CostBound
+
+@[expose] public section
+
+/-!
 Measure-theoretic setting: `N` independent uniform points in `[0,1)^3`,
 the factorisation of the integral of a product of one-coordinate
 functions, grid cells, and the integrals of the dominating factors.
 -/
-import Rng3d.CostBound
 
 open Finset MeasureTheory ProbabilityTheory
 
@@ -17,16 +26,10 @@ lemma unitCube_eq : unitCube = Set.univ.pi fun _ : Fin 3 => Set.Ico (0 : ℝ) 1 
 lemma unitCube_measurable : MeasurableSet unitCube := by
   rw [unitCube_eq]; exact MeasurableSet.univ_pi fun _ => measurableSet_Ico
 
-/-- Uniform distribution on the unit cube. -/
-noncomputable def μc : Measure V := volume.restrict unitCube
-
 instance : IsProbabilityMeasure μc := by
   constructor
   rw [μc, Measure.restrict_apply_univ, unitCube_eq, volume_pi_pi]
   simp
-
-/-- `N` independent uniform points. -/
-noncomputable def PN (N : ℕ) : Measure (Fin N → V) := Measure.pi fun _ => μc
 
 lemma lintegral_pi_prod (f : Fin N → V → ENNReal) (hf : ∀ j, Measurable (f j)) :
     ∫⁻ x, ∏ j, f j (x j) ∂(PN N) = ∏ j, ∫⁻ y, f j y ∂μc := by

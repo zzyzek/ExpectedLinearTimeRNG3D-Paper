@@ -1,9 +1,18 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.Grid
+
+@[expose] public section
+
+/-!
 Fence geometry: a segment leaving the fence crosses its surface, and a
 point of the surface lies in a patch, on which an affine function that
-is positive at the patch corners is positive (Theorem 1 of the paper).
+is positive at the patch corners is positive.
 -/
-import Rng3d.Grid
 
 open Finset
 
@@ -74,7 +83,7 @@ lemma sgn_mul_self_abs (d : ℝ) : sgn (decide (0 ≤ d)) * d = |d| := by
 
 lemma abs_sgn (b : Bool) : |sgn b| = 1 := by cases b <;> simp [sgn]
 
-/-- Theorem 1 of the paper, for one patch: an affine function positive
+/-- An affine function positive
 at the four corners of a patch is positive on the patch. -/
 lemma patch_pos (P : Patch) {z c n q : V} {h : ℝ} (hh : 0 < h)
     (hz : ∀ m, |z m - c m| ≤ h) (hface : z P.1 - c P.1 = sgn (P.2 P.1) * h)

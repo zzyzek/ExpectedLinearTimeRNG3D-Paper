@@ -1,9 +1,18 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.Expect
+
+@[expose] public section
+
+/-!
 Main theorem: the expected operation count of SPoIF on `N` independent
 uniform points in `[0,1)^3` is at most `C · N` for an absolute constant
 `C`.
 -/
-import Rng3d.Expect
 
 open Finset MeasureTheory ProbabilityTheory
 

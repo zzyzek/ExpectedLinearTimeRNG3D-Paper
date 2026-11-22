@@ -1,9 +1,18 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.Region
+
+@[expose] public section
+
+/-!
 Deterministic bound on the per-anchor operation count in terms of the
 final fence radius `R*` and the number of points within cell distance
 `2R* + 3` of the anchor.
 -/
-import Rng3d.Region
 
 open Finset
 

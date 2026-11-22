@@ -1,10 +1,19 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.Measure
+
+@[expose] public section
+
+/-!
 Expected running time.  Each anchor's operation count is dominated by a
 finite sum of products of one-coordinate functions; integrating gives a
 bound independent of `N`, so the whole algorithm has expected operation
 count `O(N)` for `N` independent uniform points in `[0,1)^3`.
 -/
-import Rng3d.Measure
 
 open Finset MeasureTheory ProbabilityTheory
 

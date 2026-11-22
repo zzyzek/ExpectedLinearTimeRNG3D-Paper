@@ -1,11 +1,20 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.Correct
+
+@[expose] public section
+
+/-!
 Securing regions.  For a fence of radius `ρ ≥ 16` and a face that is not
 outside the unit cube, an explicit box of volume `h^3/4000`
 (`h` the fence half-width) inside the unit cube has the property that
 any point in it secures all four patches of that face.  So if the fence
 is not secured at radius `ρ`, some face has no other point in its box.
 -/
-import Rng3d.Correct
 
 open Finset
 

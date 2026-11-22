@@ -1,9 +1,18 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.Fence
+
+@[expose] public section
+
+/-!
 Correctness of the SPoIF model: for points in `[0,1)^3`, the edges the
 procedure reports at anchor `i` are exactly the RNG edges at `i`.
 No general-position assumption is needed.
 -/
-import Rng3d.Fence
 
 open Finset
 
@@ -37,8 +46,7 @@ lemma convex_mem_cube {p w : V} {t : ℝ} (hp : p ∈ unitCube) (hw : w ∈ unit
   · nlinarith [mul_le_mul_of_nonneg_left (le_max_left (p m) (w m)) (sub_nonneg.mpr ht1),
       mul_le_mul_of_nonneg_left (le_max_right (p m) (w m)) ht0, max_lt p1 w1]
 
-/-- A patch secured by a point at radius `r' ≤ r` stays secured at `r`
-(Theorem 2 of the paper). -/
+/-- A patch secured by a point at radius `r' ≤ r` stays secured at `r`. -/
 lemma secures_grow (hN : 1 ≤ N) {x : Fin N → V} {i j : Fin N} {r' r : ℕ} {P : Patch}
     (hr : r' ≤ r) (hs : securesBy x i r' P j) (κ : Fin 3 → Bool) :
     0 < (x j - x i) ⬝ᵥ (center N (x i) + hR N r • cornerDir P κ - x j) := by

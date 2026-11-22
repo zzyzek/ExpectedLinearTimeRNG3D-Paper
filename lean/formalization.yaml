@@ -1,0 +1,171 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/v0.4.schema.json
+version: "v0.4"
+
+project:
+  name: "Expected linear time for the relative neighborhood graph of uniform points in the unit cube"
+  description: >-
+    A Lean 4 proof about an algorithm (SPoIF, Secure Posts on Increasing Fence) that computes
+    the relative neighborhood graph of N points of the unit cube in three dimensions. The
+    points are binned into a grid of about N cells. For each point p, a cube of grid cells
+    around p (the fence) grows until the points collected inside it cut every patch of its
+    surface off from p: a patch is cut off by a collected point q when it lies beyond the
+    plane through q with normal q - p, so that q lies in the lune of p and any point beyond the
+    patch. The neighbours of p are then found among the collected points by the direct lune
+    test. Two theorems are proved. Correctness: for any points of the cube, the neighbours
+    reported at each point are exactly its neighbours in the relative neighborhood graph.
+    Expected linear time: for N independent uniform points of the cube, the expected operation
+    count of the whole algorithm is at most C N for a constant C.
+  authors:
+    - "Z. Zzyzek (github: zzyzek)"
+  license: "CC0-1.0"
+  responsible_maintainers:
+    - "Z. Zzyzek (github: zzyzek)"
+
+classification:
+  arxiv: ["cs.CG"]
+  msc2020: ["68U05", "68W40", "60D05", "68V20"]
+
+sources:
+  - title: "SPoIF: an expected linear time algorithm for the relative neighborhood graph of uniform points in the unit cube"
+    type: original-proof
+    relationship: formalizes
+    authors:
+      - "Z. Zzyzek"
+    location: "lean/README.md (informal account) and src/cpp/rng_spoif.cpp (reference implementation) in https://github.com/zzyzek/ExpectedLinearTimeRNG3D-Paper"
+    author_endorsement: participated
+    note: >-
+      The algorithm and its C++ reference implementation are by Z. Zzyzek. The two theorems are
+      first presented by this formalization. The proofs, including the operation count and the
+      probabilistic analysis, were written in Lean by the agent listed under automation.
+  - title: "A linear expected-time algorithm for computing planar relative neighbourhood graphs"
+    type: article
+    relationship: background
+    authors:
+      - "J. Katajainen"
+      - "O. Nevalainen"
+      - "J. Teuhola"
+    id: "doi:10.1016/0020-0190(87)90225-0"
+    location: "Information Processing Letters 25 (1987), 77–86"
+    author_endorsement: not-contacted
+    note: >-
+      The planar counterpart: linear expected time for random points in the unit square. The
+      result registered here is for the unit cube in three dimensions.
+  - title: "Relative neighborhood graphs in three dimensions"
+    type: article
+    relationship: background
+    authors:
+      - "P. K. Agarwal"
+      - "J. Matoušek"
+    id: "doi:10.1016/0925-7721(92)90017-M"
+    location: "Computational Geometry 2 (1992), 1–14"
+    author_endorsement: not-contacted
+    note: >-
+      Worst-case inputs in three dimensions: a randomized algorithm with expected time
+      O(n^(3/2+ε)) for points in general position.
+
+status:
+  scope: >-
+    Formalized and registered: Rng3d.output_iff and Rng3d.expected_linear. The statements are
+    about the procedure defined in Rng3d/Defs.lean over the real numbers. output_iff: for N ≥ 1
+    points of [0,1)^3 and every point i, the set reported at i equals the set of neighbours of
+    i in the relative neighborhood graph (open lune, coincident points allowed).
+    expected_linear: there is C ≥ 0 such that for every N ≥ 1 the expectation of totalCost
+    under N independent uniform points of [0,1)^3 is at most C N. totalCost is an operation
+    count defined in Rng3d/Defs.lean: N for binning, n^3 for the grid, and for each point the
+    cells swept, the patch tests against collected points, and the lune tests. The constant C
+    is not computed. The C++ reference implementation, floating point arithmetic, and
+    distributions other than the uniform distribution on the cube are outside the
+    formalization.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+  main_results:
+    - declaration: "Rng3d.output_iff"
+      file: "Rng3d/Correct.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+    - declaration: "Rng3d.expected_linear"
+      file: "Rng3d/Main.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+
+automation:
+  methods:
+    - method: agent
+      models: ["Claude Opus 5.5", "Claude Fable 5.2"]
+      framework: "Claude Code"
+      tool_setup: >-
+        Claude Code with the Lean toolchain on a local machine. The human supplied the
+        algorithm, its C++ implementation and a draft description, and steered by review.
+      cost:
+        wall_time: "about 3 hours for the proof, about 2 hours for packaging"
+        spend_usd: "subscription-based"
+        hardware: "local machine (4 cores, 32 GB)"
+      prompting_notes: >-
+        The human asked whether the claimed result was true and how hard a Lean proof would be,
+        then for the proof, then for a literature review and packaging for the Palomar registry.
+  spend_usd: "subscription-based"
+  notes: >-
+    Claude (Opus 5.5) wrote the Lean 4 model of the algorithm, the operation count, and the
+    proofs of both theorems. Claude (Fable 5.2) converted the files to modules and wrote the
+    registry files and the documentation. The listed author contributed the algorithm, the
+    reference implementation and guidance.
+
+fidelity:
+  divergences: >-
+    The source is the algorithm as implemented in src/cpp/rng_spoif.cpp (SPoIF_3d_v). The Lean
+    procedure is a mathematical model of it over the real numbers, where the C++ uses floating
+    point. The model tests every collected point against all 24 patches at every radius. The
+    C++ has two shortcuts that the model does not have: it does not test the face opposite to
+    the direction from the anchor to the collected point, and it starts the patch tests at a
+    fixed small radius. Both can only delay the radius at which the fence is secured, so the
+    C++ collects a superset of the model's candidates. The correctness theorem and the
+    expected time theorem are stated and proved for the model. The operation count is a
+    definition written for this formalization (an upper bound on the work of each loop of the
+    procedure), not derived from an execution semantics. The grid has n cells per side with n
+    the least natural number such that N ≤ n^3, as in the C++. A patch counts as outside the
+    cube when its four corners are outside [0,1)^3, as in the C++.
+
+review:
+  status: "agent-reviewed"
+  reviewers:
+    - "none"
+  notes: >-
+    The kernel checks the proofs, which use only propext, Classical.choice and Quot.sound. The
+    local comparator run (lake comparator --paranoid) accepted both theorems. The agent
+    compared the definitions with the C++ reference implementation. Independent mathematical
+    review has not taken place. The literature search for an earlier expected linear time
+    algorithm in three dimensions is recorded in lean/README.md with the sources that were read
+    and those that could not be read.
+
+alignment:
+  namespace: "Rng3d"
+  statements:
+    - source: "Correctness of the procedure at one point"
+      lean: "Rng3d.output_iff"
+      module: "Rng3d.Correct"
+      status: "proved"
+    - source: "Expected linear operation count for uniform points"
+      lean: "Rng3d.expected_linear"
+      module: "Rng3d.Main"
+      status: "proved"
+    - source: "Relative neighborhood graph (open lune)"
+      lean: "Rng3d.isRNGEdge"
+      module: "Rng3d.Defs"
+      status: "defined"
+    - source: "Neighbours reported by the procedure at one point"
+      lean: "Rng3d.output"
+      module: "Rng3d.Defs"
+      status: "defined"
+    - source: "Operation count"
+      lean: "Rng3d.totalCost"
+      module: "Rng3d.Defs"
+      status: "defined"
+    - source: "N independent uniform points of the unit cube"
+      lean: "Rng3d.PN"
+      module: "Rng3d.Defs"
+      status: "defined"
+
+acknowledgements: "Lean 4 and Mathlib."

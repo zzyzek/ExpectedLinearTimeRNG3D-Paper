@@ -1,29 +1,24 @@
 /-
+SPDX-License-Identifier: CC0-1.0
+Dedicated to the public domain under CC0 1.0 Universal; see LICENSE.
+-/
+module
+
+public import Rng3d.Defs
+
+@[expose] public section
+
+/-!
 Basic geometry for the 3D relative neighborhood graph (RNG).
 
 Points live in `V = Fin 3 → ℝ`.  Distances are compared through the
 squared Euclidean distance `dd`, so no square roots appear in the
 RNG definition.
 -/
-import Mathlib
 
 open Finset
 
 namespace Rng3d
-
-abbrev V := Fin 3 → ℝ
-
-/-- Squared Euclidean distance. -/
-def dd (a b : V) : ℝ := (a - b) ⬝ᵥ (a - b)
-
-/-- Euclidean distance (the C++ uses `sqrt` of the squared distance). -/
-noncomputable def ed (a b : V) : ℝ := Real.sqrt (dd a b)
-
-/-- `u` lies in the open lune of `p` and `w`, so it blocks the edge `(p,w)`. -/
-def blocks (p w u : V) : Prop := dd p u < dd p w ∧ dd w u < dd p w
-
-/-- Half-open unit cube `[0,1)^3`, the domain of the points. -/
-def unitCube : Set V := {y | ∀ m, 0 ≤ y m ∧ y m < 1}
 
 lemma dd_eq (a b : V) : dd a b = ∑ m, (a m - b m) ^ 2 := by
   simp [dd, dotProduct, sq]
@@ -52,7 +47,7 @@ lemma ed_lt_of_dd_lt {a b c d : V} (h : dd a b < dd c d) : ed a b < ed c d := by
   unfold ed
   exact Real.sqrt_lt_sqrt (dd_nonneg a b) h
 
-/-- Lemma 1 of the paper, with the sign corrected: if `w` is strictly
+/-- The plane cut: if `w` is strictly
 beyond the plane through `q` with normal `q - p`, then `q` lies in the
 open lune of `p` and `w`. -/
 theorem plane_blocks {p q w : V} (h : 0 < (q - p) ⬝ᵥ (w - q)) : blocks p w q := by
@@ -96,7 +91,7 @@ lemma affine_pos_of_segment {n p q w : V} {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t ≤
   · subst h0; nlinarith
   · nlinarith [mul_nonneg ht0 (neg_nonneg.mpr hc), mul_nonneg (sub_nonneg.mpr ht1) (neg_nonneg.mpr hp.le)]
 
-/-- Theorem 2 of the paper: scaling a secured post away from the fence
+/-- Growth of the fence: scaling a secured post away from the fence
 centre `c` by `L ≥ 1` keeps it strictly beyond the cut plane. -/
 lemma scale_secure {n q c v : V} {L : ℝ} (hL : 1 ≤ L)
     (h0 : 0 < n ⬝ᵥ (c + v - q)) (h1 : 0 < n ⬝ᵥ v) :

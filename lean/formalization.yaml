@@ -28,7 +28,7 @@ classification:
 sources:
   - title: "SPoIF: an expected linear time algorithm for the relative neighborhood graph of uniform points in the unit cube"
     type: original-proof
-    relationship: formalizes
+    relationship: other
     authors:
       - "Z. Zzyzek"
     location: "lean/README.md (informal account) and src/cpp/rng_spoif.cpp (reference implementation) in https://github.com/zzyzek/ExpectedLinearTimeRNG3D-Paper"

@@ -74,13 +74,13 @@
   %The bounding volume is found by fencing in enclosing a convex hull 
   %where the bounding volume is found through a plane partition heuristic.
   The small bounding volume provides an expected constant number of neighbors to consider, making
-  each single point RNG calculation $O(1)$, providing the $O(n)$ expected runtime when enumerating through all points.
+  each single point RNG calculation expected $O(1)$, providing the $O(n)$ expected runtime when enumerating through all points.
   %The $K$ surrounding potential neighbors are then tested with
   %a naive $O(K^3)$ algorithm.
   %The RNG has finite degree for random point distributions in three dimensions,
   %resulting in an expected finite $K$, making $O(K^3) = O(1)$, providing 
   %the linear expected time algorithm when enumerating through all points.
-  To the author's knowledge, this improves on the previously best known $O(n \log n)$ in three dimensions.
+  To the author's knowledge, a linear expected time algorithm was previously known only in the plane.
 \end{abstract}
 
 %%% CREATES INITIAL 'GRAPHICAL ABSTRACT' PAGE
@@ -116,7 +116,7 @@ them.
 $$
 \begin{array}{l}
   (p _ i, p _ j) \in \text{RNG}(P) \\
-  \iff |p _ i - p _ j| \le \max _ { k \ne i,j } ( |p _ i - p _ k|, |p _ j - p _ k| )
+  \iff |p _ i - p _ j| \le \min _ { k \ne i,j } \max ( |p _ i - p _ k|, |p _ j - p _ k| )
 \end{array}
 $$
 
@@ -131,13 +131,13 @@ When points are placed uniformly at random in the unit cube, the maximum
 degree of the relative neighborhood graph is bounded by a constant.
 When random in this manner, the edges from any point connecting it to its relative
 neighborhood graph only extend to a proportionally small local neighborhood.
-This local neighborhood is effectively constant in neighbor size, allowing us to calculate
-each points relative neighborhood graph edges in constant time, providing a linear time algorithm
+This local neighborhood has constant expected size, allowing us to calculate
+each points relative neighborhood graph edges in expected constant time, providing an expected linear time algorithm
 to find the relative neighborhood graph in 3D.
 
 
 It's believed that the worst case runtime for a relative neighborhood graph in 2D and 3D is
-at least $O(n \log n)$.
+$\Omega(n \log n)$.
 Randomness holds special structure and many cases in the general case won't happen, with
 high probability.
 Note that randomness is a different condition than generic or general position, as point
@@ -181,22 +181,24 @@ test of points in $Q$ to the anchor point, $p$.
 
 Algorithm \ref{alg:RNGPointNaive} has $O(|Q|^2)$ runtime.
 As will be detailed
-in a later section, $|Q|$ will be shown to be almost surely bounded above by a constant, making the naive
-pairwise point testing of Algorithm \ref{alg:RNGPointNaive} constant time.
+in a later section, the expected value of $|Q|^2$ will be shown to be bounded above by a constant, making the naive
+pairwise point testing of Algorithm \ref{alg:RNGPointNaive} expected constant time.
+Here $\text{InLune}(p,q,u)$ is true when $|u-p| < |p-q|$ and $|u-q| < |p-q|$.
 
 \begin{algorithm}
   \caption{Single point naive Relative Neighborhood Graph for the list $Q$ to test for connections to $p$}\label{alg:RNGPointNaive}
   \begin{algorithmic}[1]
     \Procedure{RNGPointNaive}{Q, p}
-      \For{ $q \in Q / \{p\}$ }
-        \State $\text{isConnected } = \text{ \emph{False}}$
-        \For{ $u \in Q / \{p,q\}$ }
+      \State $E = \{\}$
+      \For{ $q \in Q \setminus \{p\}$ }
+        \State $\text{isConnected } = \text{ \emph{True}}$
+        \For{ $u \in Q \setminus \{p,q\}$ }
           \If{ $\text{InLune}(p,q,u)$ }
             \State $\text{isConnected } = \text{ \emph{False}}$
           \EndIf
         \EndFor
         \If{ $\text{isConnected } == \text{ \emph{True}}$ }
-          $E = E \cup (p,q)$
+          \State $E = E \cup (p,q)$
         \EndIf
       \EndFor
 
@@ -258,24 +260,19 @@ The secured fence will then be used to collect nearby points to be
 passed to a naive relative neighborhood graph calculation relative
 to the anchor point, $p$.
 
-% WIP!!!
-A fence face patch square, reprsented by a cluster of fence posts at the corners,
-is tested against a plane that passes through a point $q$ and has normal
-in the anchor point $p$
-of the fence face pathc
-
-Fence securitization is done by testing all fence post points in the frusturm that
-make the fence face patch, called \emph{fence posts}, are \emph{secured}.
-The vector in the direction of $(p-q)$ and the fence post point relative
-to the grid cell that $p$ lies in are tested against each other to make
-sure the fence post points lie on the opposite side of the implied
-half plane cut defined by the normal of $(p-q)$ and will do so
-as the fence grid grows.
+A fence face patch is a square, represented by the cluster of four fence posts at its corners.
+The patch is tested against the plane that passes through a collected point $q$ with normal
+in the direction of $(q-p)$.
+The patch is secured by $q$ when every fence post $v$ of the cluster lies strictly beyond that plane,
+$(q-p) \cdot (v-q) > 0$, and also has $(q-p) \cdot (v-c) > 0$, where $c$ is the center of the grid cell
+that $p$ lies in.
+The first condition partitions the patch from $p$.
+The second condition makes sure the patch stays partitioned as the fence grows.
 
 Once the fence has been secured, extra points past the fence need to be
 added to ensure that all nearby points that might affect connections to the
 anchor point are included to the naive relative neighborhood graph calculation.
-The $R _ {\text{max}}$ is calculated empirically during the course of
+The $R _ {\text{max}}$ is computed during the course of
 Algorithm \ref{alg:RNGpSPoIF} but is bounded above by a constant factor
 (see Appendix \ref{TK}).
 
@@ -284,8 +281,8 @@ a call to the naive relative neighborhood
 graph, on the collected points relative to the anchor point, is called
 in Algorithm \ref{alg:RNGPointNaive}.
 
-The expected size of the secured fence is finite, in grid cell units,
-and so the expected number of neighbors is almost surely bounded by
+The expected size of the secured fence is bounded by a constant, in grid cell units,
+and so the expected number of collected points is bounded by
 a constant.
 
 
@@ -294,42 +291,39 @@ a constant.
   \begin{algorithmic}[1]
     \Procedure{RNGPointSPoIF}{B, P, p}
 
-      \State Initialize $\text{FencePostCluster}[]$ entries to $\text{False}$ %, \\
-        %take $2 \times 2$ clusters of fence posts for each face
-
+      \State Initialize $\text{FencePostCluster}[]$ entries to $\text{False}$
       \State $Q = \{\}, \ \ R _f = 0, \ \ R _ {\text{max}} = 0$
-      %\State $Q = \{\}$
-      \State $c = $ grid cell $p$ falls in
+      \State $c = $ center of the grid cell $p$ falls in
 
-      \For{ $(R _ f \le N_s)$ \ {\bf and} \\  \hspace{3.0em} (\emph{False} $\in$ FencePostCluster) }
-        \State $Q' = \text{GridPerimeterCellPoints}(B, p, R_f) / \{p\}$
+      \While{ $(R _ f < N_s)$ \ {\bf and} \\  \hspace{3.0em} (\emph{False} $\in$ FencePostCluster) }
+        \State $Q' = \text{GridPerimeterCellPoints}(B, p, R_f) \setminus \{p\}$
         \For{ $q \in Q'$ }
           \State $Q = Q \cup \{q\}$
           \State $R' =$ max grid cell distance from $c$ \\
           \hspace{6.5em} $\text{Lune}(p,q)$ falls in
-          %\State $R _ {\text{max}} = $ maximum of $R_{\text{max}}$ and grid cell distance that lune of $(p,q)$ intersects
           \State $R _ {\text{max}} = \max(R_{\text{max}}, R')$
         \EndFor
 
-        \For{ $q \in  Q'$ }
-          \State Define $\rho(u) = \text{sgn}((p - q) \cdot (u - q))$
-          \State Define $\sigma(u) = \text{sgn}(u \cdot (u - q))$
-          \For{ every cluster, $\gamma$ }
-            \If{ $\gamma$ is out of bounds }
-              \State $\text{FencePostCluster}[\gamma] = \text{\emph{True}}$
-            \ElsIf{ every $v \in \gamma$, \\
-                    \hspace{8.65em} $\rho(v) = -\rho(p)$ {\bf and } \\
-                    \hspace{8.65em} $\sigma(v) = -\sigma(p)$ }
+        \For{ every cluster, $\gamma$, of the fence of radius $R_f$ }
+          \If{ every $v \in \gamma$ is out of bounds }
+            \State $\text{FencePostCluster}[\gamma] = \text{\emph{True}}$
+          \EndIf
+        \EndFor
+
+        \For{ $q \in  Q$ }
+          \For{ every cluster, $\gamma$, of the fence of radius $R_f$ }
+            \If{ every $v \in \gamma$ has \\
+                    \hspace{8.65em} $(q - p) \cdot (v - q) > 0$ {\bf and } \\
+                    \hspace{8.65em} $(q - p) \cdot (v - c) > 0$ }
               \State $\text{FencePostCluster}[\gamma] = \text{\emph{True}}$
             \EndIf
           \EndFor
         \EndFor
-        $R _ f = R _ f + 1 $
-      \EndFor
+        \State $R _ f = R _ f + 1 $
+      \EndWhile
 
-      \For{ $R _ e = [R _ f+1 : R _ {\text{max}} ]$ }
+      \For{ $R _ e = [R _ f : R _ {\text{max}} ]$ }
         \State $Q'' = \text{GridPerimeterCellPoints}(B, p, R_e)$
-        %\For{ $q \in \text{GridPerimeterCellPoints}(B, p, R_f) / \{p\}$ }
         \For{ $q \in Q''$ }
           \State $Q = Q \cup \{q\}$
         \EndFor
@@ -370,7 +364,7 @@ In such a case, Algorithm \ref{alg:RNGPointNaive} is run on all points and is eq
 condition of running a naive $O(N^2)$ relative neighborhood graph computation on all neighbor points to an
 anchor point.
 
-For random point distribution in the unit cube, we expect much better runtime as the the expected
+For random point distribution in the unit cube, we expect much better runtime as the expected
 number of potential neighbors collected will be bounded.
 
 
@@ -389,7 +383,7 @@ and the relative neighborhood graph connections are calcualted relative to this
 point.
 Each point considered in this way is called an \emph{anchor point}.
 The runtime construction for the relative neighborhood graph relative to each
-anchor point will be constant, providing an expected $O(N)$ algorithm once
+anchor point will be expected constant, providing an expected $O(N)$ algorithm once
 each anchor point is processed.
 
 To construct the relative neighborhood graph relative to the anchor point,
@@ -397,7 +391,7 @@ the algorithm makes use of a \emph{plane partition heuristic}.
 
 For each anchor point, $p$, a nearby point, $q$, is used to create a half plane cut.
 The half plane cut is defined from the plane that passes through $q$ with normal in
-the direction of $(p-q)$, $H _ {q,p} = \{ u : (p - q) \cdot (u - q) > 0 \}$.
+the direction of $(p-q)$, $H _ {q,p} = \{ u : (p - q) \cdot (u - q) \ge 0 \}$.
 All points that fall outside of $H _ {q,p}$ can never have an edge to $p$ as the point $q$
 would be in the lune excluding the connection.
 
@@ -414,8 +408,8 @@ would be in the lune excluding the connection.
 
 
 Figure \ref{fig:planePartitionHeuristic} provides a 2D representation of the plane partition heuristic, showing
-the anchor point $p$, a nearby  point $q$, a point that is excluded by the heuristic, $u$,
-and a point, $w$, that still has a potential relative neighborhood graph connection to $p$.
+the anchor point $p$, a nearby  point $q$, a point that is excluded by the heuristic, $w$,
+and a point, $u$, that still has a potential relative neighborhood graph connection to $p$.
 
 If, for set of $q$ points, a compact convex hull can be created from the $H _ {q,p}$ half plane cuts,
 then only points within the convex hull need be considered for relative neighborhood graph
@@ -458,8 +452,8 @@ unaffected.
 Once a fence has been secured and all relevant nearby points collected, a naive
 relative neighborhood graph algorithm is then used to find connections from the anchor
 point to its nerby  point collection.
-The size of collected nearby points is expected linear, so the naive algorithm runs
-in constant time.
+The number of collected nearby points has bounded expectation, so the naive algorithm runs
+in expected constant time.
 %providing the expected linear time overall as each anchor point is considered in turn.
 
 Figure \ref{TK} shows a graphical cartoon of this process as a summary.
@@ -494,7 +488,7 @@ Since there are an expected constant number of half planes to consider, vertex e
 would be constant but at the cost of an inflated runtime factor with a naive algorithm.
 Using the convex hull directly is not considered further in this paper.
 
-Below, nine fence posts per cube face (thirty six in total), will be used.
+Below, nine fence posts per cube face (fifty four in total, counting each face separately), will be used.
 Some other number of fence posts could be used.
 Another alternative is to use a shrinking area on each of the faces,
 defined by the half plane intersections.
@@ -541,7 +535,7 @@ A rough overview of the algorithm proceeds as follows:
     \end{itemize}
 \end{itemize}
 
-The binning phase creates a Poisson process with an average of one point per bin.
+The binning phase leaves an average of at most one point per bin.
 A coarse grained plane partition heuristic is used to exclude further away points from consideration
 and is the method by which the process knows to stop extending the bounding cube.
 
@@ -652,30 +646,32 @@ for the algorithm.
 %\newtheorem{lemma}[theorem]{Lemma}
 
 For an anchor point $p$, if $w$ is on the other side of the plane that passes through $q$,
-with tangent in the direction of $(q-p)$,
+with normal in the direction of $(q-p)$,
 then $q$ will always be in the lune created by $p$ and $w$ (see Figure \ref{fig:planePartitionHeuristic}):
 
 
 \begin{lemma}[Plane Partition Heuristic]
   \label{lemma:plane}
   if $p,q,w \in \mathbb{R}^3$ with:
-  %w \in H = \{ u \in \mathbb{R}^3 | (q-p) \cdot (u - q) \ge 0 \}
   $$
   \begin{array}{l}
-  w \in H  _ {q,p} = \{ u \ :  \ (p-q) \cdot (u - q) > 0 \}
+  w \notin H  _ {q,p} = \{ u \ :  \ (p-q) \cdot (u - q) \ge 0 \}
   \end{array}
   $$
   then
   $$
   \begin{array}{l}
     q \in \text{Lune}(p,w)  = \\
-      \ \ \ \{ v \ : \ |v-p| \le |p-w| \ \& \ |v-w| \le |p-w| \}\\
+      \ \ \ \{ v \ : \ |v-p| < |p-w| \ \& \ |v-w| < |p-w| \}\\
   \end{array}
   $$
 \end{lemma}
 
 \begin{pf}
-  TK
+  Let $a = w - q$ and $b = q - p$.
+  Since $w \notin H _ {q,p}$, $a \cdot b > 0$.
+  Then $|p-w|^2 = |a + b|^2 = |a|^2 + 2 a \cdot b + |b|^2$,
+  which is strictly greater than both $|b|^2 = |q-p|^2$ and $|a|^2 = |q-w|^2$.
 \end{pf}
 
 The plane partition heuristic takes points near $p$ to be used in constructing a
@@ -690,8 +686,8 @@ Lemma \ref{lemma:hull} states this more formally:
 
 \begin{lemma}[Convex Hull Heuristic]
   \label{lemma:hull}
-  Let $p \in \mathbb{R}^3$, $Q = (q _ 0, q _ 1, \dots, q _ {m-1}) \subset P$ and $\mathbf{C}$ be the
-  compact convex hull created from $H _ i = \{ u \in \mathbb{R}^3 : (p - q _ i) \cdot (u - q _ i) > 0 \}$,
+  Let $p \in \mathbb{R}^3$, $Q = (q _ 0, q _ 1, \dots, q _ {m-1}) \subset P$ and $\mathbf{C} = \cap _ i H _ i$ be the
+  convex hull created from $H _ i = \{ u \in \mathbb{R}^3 : (p - q _ i) \cdot (u - q _ i) \ge 0 \}$,
   then $(w,p) \in \text{RNG}(P,p) \to w \in \mathbf{C}$
 \end{lemma}
 
@@ -711,7 +707,7 @@ Nearby points influencing $p$ can only be a constant factor of the maximum dista
 
 \begin{lemma}[Convex Hull Extension Heuristic]
   \label{lemma:extension}
-  Let $p$ be the anchor point and $\mathbf{C}$ be the convex hull as detailed above.
+  Let $p$ be the anchor point and $\mathbf{C}$ be the convex hull as detailed above, assumed compact.
   Let $R _ {\text{max}} = \max _ {u \in \mathbf{C}} |u-p|$ be the maximum distance of the convex hull boundary to $p$.
   All points that could affect $\text{RNG}(P,p)$ lie within a sphere of radius $R _ {\text{max}}$, centered at $p$.
 \end{lemma}
@@ -789,14 +785,16 @@ anchor point is expected to use a constant number of neighbors.
   $\rho _ {d,j,k}$ ($d \in \{ \pm x, \pm y, \pm z \}$, $j \in \{0 \dots (m-1)\}$, $k \in \{0,1,2,3\}$). \\
   %and with $N _ {\rho _ {d,j}}$ the normal of the patch away from the center. \\
   Let $\mathbf{H} = (H _ 0, H _ 1, \dots, H _ {s-1})$ be a list of half plane cuts with
-  $Q = (q _ 0, q _ 1, \dots, q _ {s-1})$ be a respective point on the plane cut. \\
+  $Q = (q _ 0, q _ 1, \dots, q _ {s-1})$ be a respective point on the plane cut,
+  $H _ i = \{ u : (u - q _ i) \cdot N _ {H _ i} \ge 0 \}$. \\
+  Let $p$ be a point in the interior of $\mathbf{B}$ that lies in every $H _ i$. \\
   If, for every patch $\rho _ {d,j}$ there exists a half plane $H _ i$, with normal $N _ {H _ i}$,
   such that every corner of the patch: \\ % $k \in \{0,1,2,3\}$,
   %$\rho _ {d,j,k} \cdot N _ {H _ i} < 0$ and
   $$
   (\rho _ {d,j,k} - q _ i) \cdot N _ {H _ i} < 0
   $$
-  then $\cap _ i H _ i$ creates a compact convex hull that is strictly contained in $\mathbf{B}$.
+  then $\cap _ i H _ i$ is a compact convex hull that is contained in the interior of $\mathbf{B}$.
 
   %for all axis aligned cubes, $\mathbf{B'}$ centered at zero of side length $L \ge L _ {\mathbf{B}}$
   %, for a given patch, all patch corner point are on the other
@@ -806,7 +804,7 @@ anchor point is expected to use a constant number of neighbors.
 \end{theorem}
 
 \begin{pf}
-  The four points of $\rho _ {d,j}$, $(c\rho _ {d,j,0},\rho _ {d,j,1},\rho _ {d,j,2},\rho _ {d,j,3})$  create a frustum.
+  The four points of $\rho _ {d,j}$, $(\rho _ {d,j,0},\rho _ {d,j,1},\rho _ {d,j,2},\rho _ {d,j,3})$  create a frustum.
   A point lying on the patch is defined by $u = \sum _ k t _ k \rho _ {d,j,k}$ with $\sum _ k t _k = 1, t _k \ge 0$. \\
   Consider:\\
   $$
@@ -823,8 +821,12 @@ anchor point is expected to use a constant number of neighbors.
   $$
   %Since $t _ k \ge 0$, $L \ge 1$ and each term is non-positive.
   Since $t _ k \ge 0$ with at least one non-zero $t _ k$ and $(\rho _ {d,j,k} - q_i) \cdot N _ {H _ i} < 0$ by assumption.
-  Every point on the face of the cube $\mathbf{B}$ lies on the negative side of some half plane cut, bounding a compact
-  convex hull within.
+  Every point on the face of the cube $\mathbf{B}$ lies on the negative side of some half plane cut,
+  so $\cap _ i H _ i$ does not meet the surface of $\mathbf{B}$.
+  The set $\cap _ i H _ i$ is convex and contains $p$, which is inside $\mathbf{B}$.
+  A segment from $p$ to a point outside $\mathbf{B}$ crosses the surface of $\mathbf{B}$,
+  so $\cap _ i H _ i$ has no point outside $\mathbf{B}$.
+  It is closed and bounded, hence compact.
   %each point on the scaled patch, thus the whole patch, is partitioned by the plane defined by $H _ i$. \\
   %By assumption, all patches have been secured for $L = L _ {\mathbf{B}}$.
   %If there is a $w$ that was part of the convex hull but outside of the cube fence,
@@ -840,7 +842,7 @@ keep the patch partitioned as the fence grows.
 \begin{theorem}
   \label{thm:growSecure}
   \ \\
-  Let $\mathbf{B}$, $\mathbf{H} = (H _ 0, H _ 1, \dots, H _ {m-1})$,
+  Let $\mathbf{B}$, $\mathbf{H} = (H _ 0, H _ 1, \dots, H _ {s-1})$,
   $\mathbf{Q} = (q _ 0, q _ 1, \dots, q _ {s-1})$, $N _ {H _ i}$,
   $\rho _ {d,j}$, $\rho _ {d,j,k}$, 
   be as defined in Theorem \ref{thm:cubeConvexHull}. \\
@@ -894,21 +896,50 @@ There may be optimizations that re-use candidate nearby points but these are not
 %\begin{theorem}[RNGPointSPoIF($P$, $p$) runs in expected $O(1)$ time]
 \begin{theorem}
   \label{thm:pspoifO1}
-  The function RNGPointSPoIF($P$, $p$) runs in expected $O(1)$ time
+  For points distributed uniformly in the unit cube,
+  the function RNGPointSPoIF($P$, $p$) runs in expected $O(1)$ time
 \end{theorem}
 
 \begin{pf}
-  ...
+  A sketch is given, with the details carried out in the Lean formalization described below.
+  Let $R$ be the fence radius, in grid cells, at which the main loop stops.
+  The work of RNGPointSPoIF is bounded by a constant times $(R+2)^4 (X+1)^2$,
+  where $X$ is the number of points within $2R+3$ grid cells of $p$.
+  For a fence of radius at least $16$ grid cells and each fence face that is in bounds,
+  there is a box of volume $h^3 / 4000$ inside the unit cube,
+  where $h$ is half the fence side length,
+  such that any point in the box secures all four patches of that face.
+  If the main loop stops at radius $r \ge 17$, then at radius $r-1$ one of at most six such boxes
+  contains none of the other $N-1$ points.
+  The contribution of radius $r$ to the expected work is then at most a constant times
+  $(r+2)^4 \exp(-r/640000)$, and the sum over $r$ converges.
 \end{pf}
 
-  Finding the relative neighborhood graph connections for $p$ is $O(1)$,
+  Finding the relative neighborhood graph connections for $p$ is expected $O(1)$,
   providing us with the desired expected linear time algorithm:
 
 %\begin{theorem}[RNGSPoIF($P$) runs in expected $O(N)$ time]
 \begin{theorem}
   \label{thm:ppoifON}
-  The function RNGSPoIF($P$) runs in expected $O(N)$ time
+  For points distributed uniformly in the unit cube,
+  the function RNGSPoIF($P$) runs in expected $O(N)$ time
 \end{theorem}
+
+\begin{pf}
+  RNGSPoIF bins the $N$ points into $N _ s^3 \le 8N$ grid cells and calls RNGPointSPoIF once for each point.
+  By Theorem \ref{thm:pspoifO1} and linearity of expectation, the expected total work is $O(N)$.
+\end{pf}
+
+The correctness of the algorithm and the expected linear time bound have both been checked
+in the Lean 4 proof assistant.
+The proofs are in the \texttt{lean} directory of the repository accompanying this paper,
+as the theorems \texttt{Rng3d.output\_iff} and \texttt{Rng3d.expected\_linear}.
+The formal statements are about a mathematical model of the algorithm over the real numbers,
+with points uniform in the unit cube,
+in which $R _ {\text{max}}$ is computed from the largest distance from $p$ to a collected point,
+as in the reference implementation.
+The running time is an operation count defined in the formalization.
+The reference implementation itself and floating point arithmetic are outside the formalization.
 
 TODO:
 
@@ -928,7 +959,7 @@ TODO:
 \section{Conclusion}
 
 An expected linear time algorithm to find the relative neighborhood graph for 3D points placed uniformly
-at random in the unit cube.
+at random in the unit cube is presented.
 To the author's knowledge, no well known expected linear time algorithm for finding the relative neighborhood
 graph is known for the case of points distributed uniformly in the unit cube.
 
@@ -1007,7 +1038,7 @@ a way to mitigate them.
 For completeness, this section discusses the elementary, but tedious, calculations
 for the dart shape and volume.
 As a reminder, our goal is to show that increasing the grid fence by a fixed size
-will almost surely encapsulate a compact convex hull made from an anchor point and its neighbors.
+will with high probability encapsulate a compact convex hull made from an anchor point and its neighbors.
 The convex hull guarantees that the relative neighborhood graph edges of the anchor point to
 its neighbors need only consider candidate points within the convex hull (with some caveats
 about extending the grid fence to include saboteurs, detailed in section \ref{TK}).
@@ -1034,14 +1065,14 @@ It should be stressed that the discussion and estimates are meant primarily to s
 a finite grid fence size.
 We focus on securing a fence side by waiting for some single neighbor point to secure it.
 %, which is equivalent to considering a four post fence side.
-The Shrinking Posts on Increasing Fence (SPoIF) algorithm in this paper has a smaller expected grid fence
+The Secure Posts on Increasing Fence (SPoIF) algorithm in this paper has a smaller expected grid fence
 size before securitization
 as points can secure parts of the fence through clusters of posts, increasing the admissible
 region on each face side that can be secured.
 
 The calculations done in this appendix are meant to show that we only need to consider a finite grid fence
 size by providing correct, if horrible, bounds.
-In this paper, we are satisfied with providing empherical results for grid sizes that SPoIF uses without
+In this paper, we are satisfied with providing empirical results for grid sizes that SPoIF uses without
 going into more rigorous analysis.
 
 
@@ -1054,7 +1085,7 @@ that intersects $q$ in the slice of $z=0$ to $z=1$.
 As we vary $\eta$ we want to know what the shape is traced out.
 
 The claim is that this is the surface of a sphere whose center is at $q/2$
-of radius $q/2$.
+of radius $|q|/2$.
 
 To see this, consider $\eta = q/2 + (|q| / 2) v$, with $|v| = 1$.
 
@@ -1073,17 +1104,17 @@ $$
 Proving the claim.
 
 We want to find the the minimum volume of the dart
-for some point inside of a fence of radius $s$ (side length $2s$)
-nested inside of a larger fence of radius $s(2k+1)$ (side length $2s(2k+1)$).
+for an anchor point inside of a grid cell of side length $s$
+nested inside of a larger fence of side length $s(2k+1)$.
 
 First consider a sphere of radius $R$, centered at \\
 $(-D,-D,-D)$ intersected with two
 half planes, $H ^ + _ {x=0} = \{ u : u _ x \ge 0 \}$, $H ^ + _ {y=0} = \{ u : u _ y \ge 0 \}$.
 For suitable $R$ and $D$, we want to estimate the volume.
 
-If we take two tetrahedrons completely enclosed by the slice, the maximum diagonal of
-the slice is $(R-\sqrt{2}D)$, with maximum straight side length (in the $x$-axis line and $y$-axis line) to
-also be $(R-\sqrt{2}D)$ and slice half height to also be $(R-\sqrt{2}D)$.
+Take two tetrahedrons completely enclosed by the slice. The slice extends $(R-\sqrt{2}D)$ along its diagonal,
+at least $(R-\sqrt{2}D)$ along the $x$-axis line and the $y$-axis line,
+and has half height $\sqrt{R^2 - 2 D^2}$.
 
 The volume of the tetrahedron is then:
 
@@ -1129,7 +1160,7 @@ When choosing random points inside of the larger fence cube, we can think of the
 a single point secures one side of the fence.
 It is equivalent to talk about securing one side of the fence face with securing four posts on each of corners of
 the fence face.
-As a reminder, the Shrinking Posts on Increasing Fence (SPoIF) uses nine posts per face, equally distributed
+As a reminder, the Secure Posts on Increasing Fence (SPoIF) uses nine posts per face, equally distributed
 along the face square.
 Since there are more opportunities to secure clusters of posts on a fence face,
 in addition to still retaining the features of the dart region, SPoIF will be able to secure the fence cube
@@ -1146,11 +1177,12 @@ We can now plug in some real numbers to get coarse bounds on dart volumes, proba
 and expected grid sizes.
 
 As a reminder, we are considering a center grid cell, of side length $s$ where the anchor point, $p$,
-resides, all of which is inside a larger grid fence of side length $2s(k+1)$, for some fixed $k \ge 0, k \in \mathbb{Z}$
+resides, all of which is inside a larger grid fence of side length $s(2k+1)$, for some fixed $k \ge 0, k \in \mathbb{Z}$
 as yet to be determined.
 
-The smallest size a slice can be is if the anchor point is on the corner of the interior grid cell and to choose the grid fence corner
+As a representative configuration, take the anchor point on the corner of the interior grid cell and choose the grid fence corner
 nearest to it.
+Other positions of the anchor point within its grid cell change the lengths involved by at most $s$, a lower order term in $k$.
 For example, $p = (s/2,s/2,s/2)$, $q = ( s(k+1/2), s(k + 1/2), s(k+1/2) )$.
 
 In such a case, the center point of the sphere is:
@@ -1183,20 +1215,21 @@ This yields:
 $$
 \begin{array}{ll}
   \frac{ V_{\text{dart}} }{ V _ {\text{fence}}} > &  \frac{ \frac{4}{3} ( \frac{\sqrt{3}}{2} sk - \frac{\sqrt{2}}{2} sk)^2 ( \frac{3}{4}s^2 k^2 - \frac{1}{2} s^2 k^2 )^{\frac{1}{2}}  }{  s^3 (2k+1)^3  } \\[10pt]
-  = & \frac{ s^3 k^3 ( \sqrt{3} - \sqrt{2} )^2 }{ 3 \sqrt{2} s^3 (2k+1)^3 } \\[10pt]
-  = & \frac{ ( \sqrt{3} - \sqrt{2} )^2 }{ 3 \sqrt{2} (2+\frac{1}{k})^3 } \\[10pt]
-  > & \frac{ ( \sqrt{3} - \sqrt{2} )^2 }{ 81 \sqrt{2}  } \ \ \ \ \ \ \ \ (k \ge 1) \\[10pt]
-  > & 1 / 1198
+  = & \frac{ s^3 k^3 ( \sqrt{3} - \sqrt{2} )^2 }{ 6 s^3 (2k+1)^3 } \\[10pt]
+  = & \frac{ ( \sqrt{3} - \sqrt{2} )^2 }{ 6 (2+\frac{1}{k})^3 } \\[10pt]
+  \ge & \frac{ ( \sqrt{3} - \sqrt{2} )^2 }{ 162 } \ \ \ \ \ \ \ \ (k \ge 1) \\[10pt]
+  > & 1 / 1604
 \end{array}
 $$
 
 For points that land within one of the six dart region, we would expect this to be be a six coupon collector
 problem with, at worst, equal probability.
-The coupon collector problem grows roughly as $n \log(n)$  which, in our case of six sides of the fence to secure,
-gives us an expected $11$ or more points before we secure the fence.
+The coupon collector problem with $n$ coupons takes $n H _ n$ draws in expectation, where $H _ n$ is the $n$-th harmonic number, which,
+in our case of six sides of the fence to secure,
+gives us an expected $14.7$ points landing in the darts before we secure the fence.
 
-Each point has roughly a $6 / 1198$ chance of landing in one of the six darts, so we would expect
-roughly $11 / (6 / 1198) = 2196.3\dots$ number of points within the grid fence to appear before
+Each point has roughly a $6 / 1604$ chance of landing in one of the six darts, so we would expect
+roughly $14.7 / (6 / 1604) = 3929.8$ points within the grid fence to appear before
 securing the fence.
 
 Each grid cell has roughly one point, so we would expect the number grid cells on a side to
@@ -1204,14 +1237,20 @@ be
 
 $$
 \begin{array}{ll}
-  & (11 \cdot 1198 / 6)^{\frac{1}{3}} \\
-  & = 12.9\ldots \\
-  & \sim 13 \\
+  & (14.7 \cdot 1604 / 6)^{\frac{1}{3}} \\
+  & = 15.7\ldots \\
+  & \sim 16 \\
 \end{array}
 $$
 
-That is, we would expect $k \sim 6$, iterating roughly six to seven steps of increasing the grid fence size
+That is, we would expect $k$ between $7$ and $8$, iterating roughly seven to eight steps of increasing the grid fence size
 until securing the fence in this way.
+
+These figures are estimates for one configuration of the anchor point and they ignore the boundary of the unit cube.
+A bound that holds for every position of the anchor point, including near the boundary, is part of the Lean formalization.
+For a fence of radius at least $16$ grid cells and each fence face that is in bounds,
+a box of volume $h^3 / 4000$ inside the unit cube, with $h$ half the fence side length,
+has the property that any point in it secures the whole face.
 
 
 \section{Appendix.1}
